@@ -18,9 +18,9 @@ test("Health Lambda created with Node.js 20", () => {
   });
 });
 
-test("Auth Google Lambda created with Node.js 20", () => {
+test("Connect Gmail Lambda created with Node.js 20", () => {
   template.hasResourceProperties("AWS::Lambda::Function", {
-    FunctionName: "inboxpilot-auth-google",
+    FunctionName: "inboxpilot-connect-gmail",
     Runtime: "nodejs20.x",
     Handler: "index.handler",
   });
@@ -126,9 +126,9 @@ test("POST /auth/verify route exists", () => {
   });
 });
 
-test("GET /auth/google/callback route exists", () => {
+test("GET /connect/gmail route exists", () => {
   template.hasResourceProperties("AWS::ApiGatewayV2::Route", {
-    RouteKey: "GET /auth/google/callback",
+    RouteKey: "GET /connect/gmail",
   });
 });
 

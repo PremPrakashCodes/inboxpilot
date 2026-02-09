@@ -1,6 +1,7 @@
 node_modules
 .cdk.staging
 cdk.out
+dist
 
 # CDK TypeScript build output (infra only)
 infra/**/*.js
