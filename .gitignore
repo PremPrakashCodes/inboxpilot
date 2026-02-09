@@ -1,0 +1,20 @@
+node_modules
+.cdk.staging
+cdk.out
+
+# CDK TypeScript build output (infra only)
+infra/**/*.js
+infra/**/*.d.ts
+infra/**/*.js.map
+!infra/jest.config.js
+
+# Environment
+.env
+.env.*
+
+# OS
+.DS_Store
+
+# IDE
+.idea
+.vscode

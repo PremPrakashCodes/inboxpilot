@@ -1,0 +1,9 @@
+{
+  "name": "@inboxpilot/auth-google",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "dependencies": {
+    "googleapis": "^144.0.0"
+  }
+}
