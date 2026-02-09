@@ -55,6 +55,7 @@ export function createLambdas(scope: cdk.Stack, props: LambdasProps): LambdasRes
     timeout: cdk.Duration.seconds(10),
     environment: {
       RESEND_API_KEY: process.env.RESEND_API_KEY || "",
+      EMAIL_FROM: process.env.EMAIL_FROM || "",
       USERS_TABLE: props.tables.users.tableName,
       APIKEYS_TABLE: props.tables.apikeys.tableName,
     },
