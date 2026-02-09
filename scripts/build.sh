@@ -28,4 +28,15 @@ for app in "${LAMBDAS[@]}"; do
     --external:googleapis
 done
 
+# Bundle docs Lambda with embedded swagger spec
+echo "Bundling apps/docs..."
+DOMAIN="${INBOXPILOT_DOMAIN:-inboxpilot.premprakash.dev}"
+SPEC=$(node -e "const yaml=require('yaml');const fs=require('fs');const raw=fs.readFileSync('$ROOT/swagger.yaml','utf8').replace('__DOMAIN__','$DOMAIN');console.log(JSON.stringify(yaml.parse(raw)))")
+$ESBUILD "$ROOT/apps/docs/src/index.ts" \
+  --bundle \
+  --platform=node \
+  --target=node20 \
+  --outfile="$ROOT/apps/docs/dist/index.js" \
+  --define:SPEC="$SPEC"
+
 echo "Build complete."

@@ -17,6 +17,7 @@ export interface LambdasProps {
 
 export interface LambdasResult {
   health: lambda.Function;
+  docs: lambda.Function;
   authRegister: lambda.Function;
   authLogin: lambda.Function;
   authVerify: lambda.Function;
@@ -31,6 +32,14 @@ export function createLambdas(scope: cdk.Stack, props: LambdasProps): LambdasRes
     runtime: lambda.Runtime.NODEJS_20_X,
     handler: "index.handler",
     code: lambda.Code.fromAsset(path.join(APPS, "health/dist")),
+    role,
+  });
+
+  const docs = new lambda.Function(scope, "InboxPilotDocsFn", {
+    functionName: "inboxpilot-docs",
+    runtime: lambda.Runtime.NODEJS_20_X,
+    handler: "index.handler",
+    code: lambda.Code.fromAsset(path.join(APPS, "docs/dist")),
     role,
   });
 
@@ -115,5 +124,5 @@ export function createLambdas(scope: cdk.Stack, props: LambdasProps): LambdasRes
     },
   });
 
-  return { health, authRegister, authLogin, authVerify, connectGmail };
+  return { health, docs, authRegister, authLogin, authVerify, connectGmail };
 }

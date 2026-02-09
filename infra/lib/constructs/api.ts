@@ -9,6 +9,7 @@ export interface ApiProps {
   certificate: acm.Certificate;
   lambdas: {
     health: lambda.Function;
+    docs: lambda.Function;
     authRegister: lambda.Function;
     authLogin: lambda.Function;
     authVerify: lambda.Function;
@@ -40,6 +41,7 @@ export function createApi(scope: cdk.Stack, props: ApiProps): ApiResult {
 
   const routes: Array<{ method: "GET" | "POST"; path: string; fn: lambda.Function; name: string }> = [
     { method: "GET", path: "/health", fn: props.lambdas.health, name: "Health" },
+    { method: "GET", path: "/docs", fn: props.lambdas.docs, name: "Docs" },
     { method: "POST", path: "/auth/register", fn: props.lambdas.authRegister, name: "AuthRegister" },
     { method: "POST", path: "/auth/login", fn: props.lambdas.authLogin, name: "AuthLogin" },
     { method: "POST", path: "/auth/verify", fn: props.lambdas.authVerify, name: "AuthVerify" },

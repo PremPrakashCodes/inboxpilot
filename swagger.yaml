@@ -1,0 +1,243 @@
+openapi: 3.0.3
+info:
+  title: InboxPilot API
+  version: 1.0.0
+  description: API for InboxPilot — OTP-based auth and Gmail integration
+
+servers:
+  - url: https://__DOMAIN__
+
+paths:
+  /health:
+    get:
+      summary: Health check
+      operationId: healthCheck
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: ok
+
+  /auth/register:
+    post:
+      summary: Register a new user
+      operationId: authRegister
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email]
+              properties:
+                name:
+                  type: string
+                  example: John
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+      responses:
+        "201":
+          description: User registered
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: User registered successfully
+                  email:
+                    type: string
+                    example: user@example.com
+                  name:
+                    type: string
+                    example: John
+        "400":
+          description: Missing fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: name and email are required
+        "409":
+          description: User already exists
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: User already exists
+
+  /auth/login:
+    post:
+      summary: Send OTP to email
+      operationId: authLogin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+      responses:
+        "200":
+          description: OTP sent
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: OTP sent to your email
+                  email:
+                    type: string
+                    example: user@example.com
+        "400":
+          description: Missing email
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: email is required
+        "404":
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: User not found. Please register first.
+
+  /auth/verify:
+    post:
+      summary: Verify OTP and get session token
+      operationId: authVerify
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, otp]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: user@example.com
+                otp:
+                  type: string
+                  example: "123456"
+                new:
+                  type: boolean
+                  description: Set true to force a new session token
+                  default: false
+      responses:
+        "200":
+          description: Verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Verified successfully
+                  email:
+                    type: string
+                    example: user@example.com
+                  sessionToken:
+                    type: string
+                    format: uuid
+                    example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
+                  createdAt:
+                    type: string
+                    format: date-time
+                    example: "2026-02-10T00:00:00.000Z"
+                  expiresIn:
+                    type: string
+                    example: 30 days
+        "400":
+          description: Missing fields
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: email and otp are required
+        "401":
+          description: Invalid or expired OTP
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: Invalid or expired OTP
+
+  /connect/gmail:
+    get:
+      summary: Connect Gmail account via Google OAuth
+      operationId: connectGmail
+      security:
+        - bearerAuth: []
+      responses:
+        "302":
+          description: Redirects to Google consent screen
+          headers:
+            Location:
+              schema:
+                type: string
+                format: uri
+        "200":
+          description: Gmail connected (returned after OAuth callback)
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Gmail connected successfully
+                  userId:
+                    type: string
+                    example: user@example.com
+                  gmailEmail:
+                    type: string
+                    example: user.work@gmail.com
+        "401":
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+              example:
+                error: "Authorization header required (Bearer <sessionToken>)"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      description: Session token from /auth/verify
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
