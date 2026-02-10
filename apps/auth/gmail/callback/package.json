@@ -1,0 +1,9 @@
+{
+	"name": "@inboxpilot/gmail-callback",
+	"version": "1.0.0",
+	"private": true,
+	"main": "index.js",
+	"dependencies": {
+		"googleapis": "^144.0.0"
+	}
+}

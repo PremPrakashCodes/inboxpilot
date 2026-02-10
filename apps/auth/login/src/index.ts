@@ -32,7 +32,7 @@ export const handler = async (event: { body?: string }) => {
 
 	await db.send(
 		new PutCommand({
-			TableName: process.env.APIKEYS_TABLE,
+			TableName: process.env.OTP_TABLE,
 			Item: { pk: `otp#${email}`, otp, createdAt: now, ttl },
 		}),
 	);

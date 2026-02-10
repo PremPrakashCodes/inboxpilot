@@ -5,12 +5,14 @@ export interface TablesResult {
 	accounts: dynamodb.Table;
 	users: dynamodb.Table;
 	apikeys: dynamodb.Table;
+	otp: dynamodb.Table;
 }
 
 export function createTables(scope: cdk.Stack): TablesResult {
 	const accounts = new dynamodb.Table(scope, "InboxPilotAccounts", {
 		tableName: "inboxpilot-accounts",
-		partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
+		partitionKey: { name: "userId", type: dynamodb.AttributeType.STRING },
+		sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
 		billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
 		removalPolicy: cdk.RemovalPolicy.RETAIN,
 	});
@@ -36,5 +38,13 @@ export function createTables(scope: cdk.Stack): TablesResult {
 		projectionType: dynamodb.ProjectionType.ALL,
 	});
 
-	return { accounts, users, apikeys };
+	const otp = new dynamodb.Table(scope, "InboxPilotOtp", {
+		tableName: "inboxpilot-otp",
+		partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
+		billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+		timeToLiveAttribute: "ttl",
+		removalPolicy: cdk.RemovalPolicy.DESTROY,
+	});
+
+	return { accounts, users, apikeys, otp };
 }

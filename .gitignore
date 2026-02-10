@@ -20,3 +20,5 @@ infra/**/*.js.map
 # IDE
 .idea
 .vscode
+
+.claude

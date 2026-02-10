@@ -24,7 +24,7 @@ export const handler = async (event: { body?: string }) => {
 	// Look up stored OTP
 	const result = await db.send(
 		new GetCommand({
-			TableName: process.env.APIKEYS_TABLE,
+			TableName: process.env.OTP_TABLE,
 			Key: { pk: `otp#${email}` },
 		}),
 	);
@@ -38,7 +38,7 @@ export const handler = async (event: { body?: string }) => {
 	// Delete used OTP
 	await db.send(
 		new DeleteCommand({
-			TableName: process.env.APIKEYS_TABLE,
+			TableName: process.env.OTP_TABLE,
 			Key: { pk: `otp#${email}` },
 		}),
 	);

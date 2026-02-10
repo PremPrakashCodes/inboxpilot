@@ -13,6 +13,8 @@ export interface ApiProps {
 		authLogin: lambda.Function;
 		authVerify: lambda.Function;
 		connectGmail: lambda.Function;
+		gmailCallback: lambda.Function;
+		accounts: lambda.Function;
 		apiKeys: lambda.Function;
 	};
 }
@@ -80,8 +82,14 @@ export function createApi(scope: cdk.Stack, props: ApiProps): ApiResult {
 		{
 			method: "GET",
 			path: "/auth/gmail/callback",
-			fn: props.lambdas.connectGmail,
+			fn: props.lambdas.gmailCallback,
 			name: "GmailCallback",
+		},
+		{
+			method: "GET",
+			path: "/accounts",
+			fn: props.lambdas.accounts,
+			name: "Accounts",
 		},
 		{
 			method: "GET",

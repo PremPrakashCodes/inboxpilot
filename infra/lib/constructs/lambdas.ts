@@ -12,6 +12,7 @@ export interface LambdasProps {
 		accounts: dynamodb.Table;
 		users: dynamodb.Table;
 		apikeys: dynamodb.Table;
+		otp: dynamodb.Table;
 	};
 }
 
@@ -21,6 +22,8 @@ export interface LambdasResult {
 	authLogin: lambda.Function;
 	authVerify: lambda.Function;
 	connectGmail: lambda.Function;
+	gmailCallback: lambda.Function;
+	accounts: lambda.Function;
 	apiKeys: lambda.Function;
 }
 
@@ -65,7 +68,7 @@ export function createLambdas(
 			RESEND_API_KEY: process.env.RESEND_API_KEY || "",
 			EMAIL_FROM: process.env.EMAIL_FROM || "",
 			USERS_TABLE: props.tables.users.tableName,
-			APIKEYS_TABLE: props.tables.apikeys.tableName,
+			OTP_TABLE: props.tables.otp.tableName,
 		},
 	});
 
@@ -80,6 +83,7 @@ export function createLambdas(
 			RESEND_API_KEY: process.env.RESEND_API_KEY || "",
 			EMAIL_FROM: process.env.EMAIL_FROM || "",
 			APIKEYS_TABLE: props.tables.apikeys.tableName,
+			OTP_TABLE: props.tables.otp.tableName,
 		},
 	});
 
@@ -94,8 +98,38 @@ export function createLambdas(
 			GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "",
 			GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || "",
 			GOOGLE_REDIRECT_URI: `https://${props.domain}/auth/gmail/callback`,
-			ACCOUNTS_TABLE: props.tables.accounts.tableName,
 			APIKEYS_TABLE: props.tables.apikeys.tableName,
+		},
+	});
+
+	const gmailCallback = new lambda.Function(
+		scope,
+		"InboxPilotGmailCallbackFn",
+		{
+			functionName: "inboxpilot-gmail-callback",
+			runtime: lambda.Runtime.NODEJS_22_X,
+			handler: "index.handler",
+			code: lambda.Code.fromAsset(path.join(APPS, "auth/gmail/callback/dist")),
+			role,
+			timeout: cdk.Duration.seconds(10),
+			environment: {
+				GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "",
+				GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || "",
+				GOOGLE_REDIRECT_URI: `https://${props.domain}/auth/gmail/callback`,
+				ACCOUNTS_TABLE: props.tables.accounts.tableName,
+			},
+		},
+	);
+
+	const accounts = new lambda.Function(scope, "InboxPilotAccountsFn", {
+		functionName: "inboxpilot-accounts",
+		runtime: lambda.Runtime.NODEJS_22_X,
+		handler: "index.handler",
+		code: lambda.Code.fromAsset(path.join(APPS, "accounts/dist")),
+		role,
+		timeout: cdk.Duration.seconds(10),
+		environment: {
+			ACCOUNTS_TABLE: props.tables.accounts.tableName,
 		},
 	});
 
@@ -113,7 +147,7 @@ export function createLambdas(
 		},
 	});
 
-	// Grant DynamoDB access to shared role (includes GSI)
+	// Grant DynamoDB access to shared role
 	new iam.CfnRolePolicy(scope, "InboxPilotDynamoPolicy", {
 		roleName: "AWSLambdaBasicExecutionRole",
 		policyName: "inboxpilot-dynamo-access",
@@ -134,11 +168,21 @@ export function createLambdas(
 						props.tables.users.tableArn,
 						props.tables.apikeys.tableArn,
 						`${props.tables.apikeys.tableArn}/index/*`,
+						props.tables.otp.tableArn,
 					],
 				},
 			],
 		},
 	});
 
-	return { docs, authRegister, authLogin, authVerify, connectGmail, apiKeys };
+	return {
+		docs,
+		authRegister,
+		authLogin,
+		authVerify,
+		connectGmail,
+		gmailCallback,
+		accounts,
+		apiKeys,
+	};
 }

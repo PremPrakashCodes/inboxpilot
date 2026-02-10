@@ -14,6 +14,7 @@ LAMBDAS=(
   "apps/auth/login"
   "apps/auth/verify"
   "apps/keys"
+  "apps/accounts"
 )
 
 for app in "${LAMBDAS[@]}"; do
@@ -26,14 +27,16 @@ for app in "${LAMBDAS[@]}"; do
     --external:@aws-sdk/*
 done
 
-# Bundle Gmail Lambda (includes googleapis)
-echo "Bundling apps/connect/gmail..."
-$ESBUILD "$ROOT/apps/connect/gmail/src/index.ts" \
-  --bundle \
-  --platform=node \
-  --target=node22 \
-  --outfile="$ROOT/apps/connect/gmail/dist/index.js" \
-  --external:@aws-sdk/*
+# Bundle Gmail Lambdas (include googleapis)
+for gmail_app in "apps/connect/gmail" "apps/auth/gmail/callback"; do
+  echo "Bundling $gmail_app..."
+  $ESBUILD "$ROOT/$gmail_app/src/index.ts" \
+    --bundle \
+    --platform=node \
+    --target=node22 \
+    --outfile="$ROOT/$gmail_app/dist/index.js" \
+    --external:@aws-sdk/*
+done
 
 # Bundle docs Lambda with embedded swagger spec
 echo "Bundling apps/docs..."

@@ -37,7 +37,10 @@ test("API Keys Lambda created with Node.js 22", () => {
 test("DynamoDB accounts table created", () => {
 	template.hasResourceProperties("AWS::DynamoDB::Table", {
 		TableName: "inboxpilot-accounts",
-		KeySchema: [{ AttributeName: "pk", KeyType: "HASH" }],
+		KeySchema: [
+			{ AttributeName: "userId", KeyType: "HASH" },
+			{ AttributeName: "sk", KeyType: "RANGE" },
+		],
 		BillingMode: "PAY_PER_REQUEST",
 	});
 });
@@ -59,6 +62,32 @@ test("DynamoDB apikeys table created", () => {
 			AttributeName: "ttl",
 			Enabled: true,
 		},
+	});
+});
+
+test("Accounts Lambda created with Node.js 22", () => {
+	template.hasResourceProperties("AWS::Lambda::Function", {
+		FunctionName: "inboxpilot-accounts",
+		Runtime: "nodejs22.x",
+		Handler: "index.handler",
+	});
+});
+
+test("DynamoDB OTP table created", () => {
+	template.hasResourceProperties("AWS::DynamoDB::Table", {
+		TableName: "inboxpilot-otp",
+		KeySchema: [{ AttributeName: "pk", KeyType: "HASH" }],
+		BillingMode: "PAY_PER_REQUEST",
+		TimeToLiveSpecification: {
+			AttributeName: "ttl",
+			Enabled: true,
+		},
+	});
+});
+
+test("GET /accounts route exists", () => {
+	template.hasResourceProperties("AWS::ApiGatewayV2::Route", {
+		RouteKey: "GET /accounts",
 	});
 });
 
