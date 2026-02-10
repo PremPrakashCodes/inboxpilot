@@ -13,7 +13,9 @@ function getOAuth2Client() {
 
 // Google OAuth callback — no Bearer auth needed (uses state param)
 async function handleCallback(event: AuthenticatedEvent) {
-	const state = event.queryStringParameters!.state!;
+	const { code, state } = event.queryStringParameters ?? {};
+	if (!code || !state) return json(400, { error: "Missing OAuth parameters" });
+
 	let userId: string;
 	try {
 		userId = JSON.parse(Buffer.from(state, "base64url").toString()).userId;
@@ -22,14 +24,14 @@ async function handleCallback(event: AuthenticatedEvent) {
 	}
 
 	const oauth2Client = getOAuth2Client();
-	const { tokens } = await oauth2Client.getToken(
-		event.queryStringParameters!.code!,
-	);
+	const { tokens } = await oauth2Client.getToken(code);
 	oauth2Client.setCredentials(tokens);
 
 	const oauth2 = google.oauth2({ version: "v2", auth: oauth2Client });
 	const { data: userInfo } = await oauth2.userinfo.get();
-	const gmailEmail = userInfo.email!;
+	const gmailEmail = userInfo.email;
+	if (!gmailEmail)
+		return json(400, { error: "Could not retrieve email from Google" });
 	const now = new Date().toISOString();
 
 	await db.send(

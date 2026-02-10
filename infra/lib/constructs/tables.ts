@@ -30,5 +30,11 @@ export function createTables(scope: cdk.Stack): TablesResult {
 		removalPolicy: cdk.RemovalPolicy.RETAIN,
 	});
 
+	apikeys.addGlobalSecondaryIndex({
+		indexName: "userId-index",
+		partitionKey: { name: "userId", type: dynamodb.AttributeType.STRING },
+		projectionType: dynamodb.ProjectionType.ALL,
+	});
+
 	return { accounts, users, apikeys };
 }

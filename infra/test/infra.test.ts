@@ -10,18 +10,26 @@ beforeAll(() => {
 	template = Template.fromStack(stack);
 });
 
-test("Health Lambda created with Node.js 20", () => {
+test("Docs Lambda created with Node.js 22", () => {
 	template.hasResourceProperties("AWS::Lambda::Function", {
-		FunctionName: "inboxpilot-health",
-		Runtime: "nodejs20.x",
+		FunctionName: "inboxpilot-docs",
+		Runtime: "nodejs22.x",
 		Handler: "index.handler",
 	});
 });
 
-test("Connect Gmail Lambda created with Node.js 20", () => {
+test("Connect Gmail Lambda created with Node.js 22", () => {
 	template.hasResourceProperties("AWS::Lambda::Function", {
 		FunctionName: "inboxpilot-connect-gmail",
-		Runtime: "nodejs20.x",
+		Runtime: "nodejs22.x",
+		Handler: "index.handler",
+	});
+});
+
+test("API Keys Lambda created with Node.js 22", () => {
+	template.hasResourceProperties("AWS::Lambda::Function", {
+		FunctionName: "inboxpilot-api-keys",
+		Runtime: "nodejs22.x",
 		Handler: "index.handler",
 	});
 });
@@ -54,6 +62,19 @@ test("DynamoDB apikeys table created", () => {
 	});
 });
 
+test("DynamoDB apikeys table has userId GSI", () => {
+	template.hasResourceProperties("AWS::DynamoDB::Table", {
+		TableName: "inboxpilot-apikeys",
+		GlobalSecondaryIndexes: [
+			{
+				IndexName: "userId-index",
+				KeySchema: [{ AttributeName: "userId", KeyType: "HASH" }],
+				Projection: { ProjectionType: "ALL" },
+			},
+		],
+	});
+});
+
 test("DynamoDB policy attached to shared role", () => {
 	template.hasResourceProperties("AWS::IAM::RolePolicy", {
 		RoleName: "AWSLambdaBasicExecutionRole",
@@ -78,16 +99,10 @@ test("CORS configured on HTTP API", () => {
 	});
 });
 
-test("GET /health route exists", () => {
-	template.hasResourceProperties("AWS::ApiGatewayV2::Route", {
-		RouteKey: "GET /health",
-	});
-});
-
-test("Auth Register Lambda created with Node.js 20", () => {
+test("Auth Register Lambda created with Node.js 22", () => {
 	template.hasResourceProperties("AWS::Lambda::Function", {
 		FunctionName: "inboxpilot-auth-register",
-		Runtime: "nodejs20.x",
+		Runtime: "nodejs22.x",
 		Handler: "index.handler",
 	});
 });
@@ -98,10 +113,10 @@ test("POST /auth/register route exists", () => {
 	});
 });
 
-test("Auth Login Lambda created with Node.js 20", () => {
+test("Auth Login Lambda created with Node.js 22", () => {
 	template.hasResourceProperties("AWS::Lambda::Function", {
 		FunctionName: "inboxpilot-auth-login",
-		Runtime: "nodejs20.x",
+		Runtime: "nodejs22.x",
 		Handler: "index.handler",
 	});
 });
@@ -112,10 +127,10 @@ test("POST /auth/login route exists", () => {
 	});
 });
 
-test("Auth Verify Lambda created with Node.js 20", () => {
+test("Auth Verify Lambda created with Node.js 22", () => {
 	template.hasResourceProperties("AWS::Lambda::Function", {
 		FunctionName: "inboxpilot-auth-verify",
-		Runtime: "nodejs20.x",
+		Runtime: "nodejs22.x",
 		Handler: "index.handler",
 	});
 });
@@ -126,9 +141,39 @@ test("POST /auth/verify route exists", () => {
 	});
 });
 
+test("GET /docs route exists", () => {
+	template.hasResourceProperties("AWS::ApiGatewayV2::Route", {
+		RouteKey: "GET /docs",
+	});
+});
+
 test("GET /connect/gmail route exists", () => {
 	template.hasResourceProperties("AWS::ApiGatewayV2::Route", {
 		RouteKey: "GET /connect/gmail",
+	});
+});
+
+test("GET /keys route exists", () => {
+	template.hasResourceProperties("AWS::ApiGatewayV2::Route", {
+		RouteKey: "GET /keys",
+	});
+});
+
+test("POST /keys route exists", () => {
+	template.hasResourceProperties("AWS::ApiGatewayV2::Route", {
+		RouteKey: "POST /keys",
+	});
+});
+
+test("PATCH /keys route exists", () => {
+	template.hasResourceProperties("AWS::ApiGatewayV2::Route", {
+		RouteKey: "PATCH /keys",
+	});
+});
+
+test("DELETE /keys route exists", () => {
+	template.hasResourceProperties("AWS::ApiGatewayV2::Route", {
+		RouteKey: "DELETE /keys",
 	});
 });
 

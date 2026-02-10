@@ -1,6 +1,6 @@
 # GET /connect/gmail
 
-Connects a Gmail account via Google OAuth. Requires `Authorization: Bearer <sessionToken>` header.
+Connects a Gmail account via Google OAuth. Requires `Authorization: Bearer <INBOXPILOT_API_KEY>` header.
 
 ## Flow
 

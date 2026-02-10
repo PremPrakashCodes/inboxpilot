@@ -5,6 +5,7 @@ export interface AuthenticatedEvent {
 	headers?: Record<string, string>;
 	body?: string;
 	queryStringParameters?: Record<string, string>;
+	requestContext?: { http?: { method: string; path: string } };
 	[key: string]: unknown;
 }
 

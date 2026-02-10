@@ -1,8 +1,8 @@
+import * as path from "node:path";
 import * as cdk from "aws-cdk-lib";
 import type * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
-import * as path from "path";
 
 const APPS = path.join(__dirname, "../../../apps");
 
@@ -21,6 +21,7 @@ export interface LambdasResult {
 	authLogin: lambda.Function;
 	authVerify: lambda.Function;
 	connectGmail: lambda.Function;
+	apiKeys: lambda.Function;
 }
 
 export function createLambdas(
@@ -76,6 +77,8 @@ export function createLambdas(
 		role,
 		timeout: cdk.Duration.seconds(10),
 		environment: {
+			RESEND_API_KEY: process.env.RESEND_API_KEY || "",
+			EMAIL_FROM: process.env.EMAIL_FROM || "",
 			APIKEYS_TABLE: props.tables.apikeys.tableName,
 		},
 	});
@@ -96,7 +99,21 @@ export function createLambdas(
 		},
 	});
 
-	// Grant DynamoDB access to shared role
+	const apiKeys = new lambda.Function(scope, "InboxPilotApiKeysFn", {
+		functionName: "inboxpilot-api-keys",
+		runtime: lambda.Runtime.NODEJS_22_X,
+		handler: "index.handler",
+		code: lambda.Code.fromAsset(path.join(APPS, "api-keys/dist")),
+		role,
+		timeout: cdk.Duration.seconds(10),
+		environment: {
+			RESEND_API_KEY: process.env.RESEND_API_KEY || "",
+			EMAIL_FROM: process.env.EMAIL_FROM || "",
+			APIKEYS_TABLE: props.tables.apikeys.tableName,
+		},
+	});
+
+	// Grant DynamoDB access to shared role (includes GSI)
 	new iam.CfnRolePolicy(scope, "InboxPilotDynamoPolicy", {
 		roleName: "AWSLambdaBasicExecutionRole",
 		policyName: "inboxpilot-dynamo-access",
@@ -116,11 +133,12 @@ export function createLambdas(
 						props.tables.accounts.tableArn,
 						props.tables.users.tableArn,
 						props.tables.apikeys.tableArn,
+						`${props.tables.apikeys.tableArn}/index/*`,
 					],
 				},
 			],
 		},
 	});
 
-	return { docs, authRegister, authLogin, authVerify, connectGmail };
+	return { docs, authRegister, authLogin, authVerify, connectGmail, apiKeys };
 }

@@ -1,5 +1,5 @@
+import crypto from "node:crypto";
 import { GetCommand } from "@aws-sdk/lib-dynamodb";
-import crypto from "crypto";
 import { db } from "./db";
 
 export function generateSessionToken(): string {

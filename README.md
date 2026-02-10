@@ -17,11 +17,12 @@ OTP-based auth and Gmail integration API, built with AWS serverless.
 apps/
   auth/register/   # POST /auth/register
   auth/login/      # POST /auth/login — sends OTP via email
-  auth/verify/     # POST /auth/verify — returns session token
+  auth/verify/     # POST /auth/verify — sends API key via email
+  api-keys/        # CRUD /keys — manage API keys (Bearer auth)
   connect/gmail/   # GET  /connect/gmail — Google OAuth flow
   docs/            # GET  /docs — Swagger UI
 packages/
-  core/            # Shared utilities (DynamoDB client, helpers)
+  core/            # Shared utilities (auth, email, validation, DynamoDB)
 infra/             # CDK stack (Lambda, API Gateway, DynamoDB)
 ```
 

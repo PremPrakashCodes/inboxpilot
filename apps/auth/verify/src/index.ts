@@ -1,20 +1,25 @@
+import crypto from "node:crypto";
 import { DeleteCommand, GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
-import { db, generateSessionToken, json, parseBody } from "@inboxpilot/core";
+import {
+	API_KEY_TTL_SECONDS,
+	apiKeyEmailTemplate,
+	db,
+	generateSessionToken,
+	json,
+	parseBody,
+	sendEmail,
+	verifySchema,
+} from "@inboxpilot/core";
 
 export const handler = async (event: { body?: string }) => {
 	const body = parseBody(event);
 	if (!body) return json(400, { error: "Invalid JSON" });
 
-	const {
-		email,
-		otp,
-		new: createNew,
-	} = body as {
-		email?: string;
-		otp?: string;
-		new?: boolean;
-	};
-	if (!email || !otp) return json(400, { error: "email and otp are required" });
+	const parsed = verifySchema.safeParse(body);
+	if (!parsed.success) {
+		return json(400, { error: parsed.error.issues[0].message });
+	}
+	const { email, otp } = parsed.data;
 
 	// Look up stored OTP
 	const result = await db.send(
@@ -38,48 +43,49 @@ export const handler = async (event: { body?: string }) => {
 		}),
 	);
 
-	// If not requesting new token, check for existing session
-	if (!createNew) {
-		const existing = await db.send(
-			new GetCommand({
-				TableName: process.env.APIKEYS_TABLE,
-				Key: { pk: `session#${email}` },
-			}),
-		);
-		if (existing.Item && existing.Item.ttl > Math.floor(Date.now() / 1000)) {
-			return json(200, {
-				message: "Verified successfully",
-				email,
-				sessionToken: existing.Item.sessionToken,
-				createdAt: existing.Item.createdAt,
-				expiresIn: "30 days",
-			});
-		}
+	// Generate new API key with 30-day expiry
+	const token = generateSessionToken();
+	const keyId = crypto.randomUUID();
+	const name = "Default";
+	const now = new Date().toISOString();
+	const ttl = Math.floor(Date.now() / 1000) + API_KEY_TTL_SECONDS;
+	const expiresAt = new Date(
+		Date.now() + API_KEY_TTL_SECONDS * 1000,
+	).toISOString();
+
+	await db.send(
+		new PutCommand({
+			TableName: process.env.APIKEYS_TABLE,
+			Item: {
+				pk: token,
+				userId: email,
+				keyId,
+				name,
+				createdAt: now,
+				expiresAt,
+				ttl,
+			},
+		}),
+	);
+	await db.send(
+		new PutCommand({
+			TableName: process.env.APIKEYS_TABLE,
+			Item: { pk: `keyref#${keyId}`, token, userId: email },
+		}),
+	);
+
+	try {
+		await sendEmail({
+			from: process.env.EMAIL_FROM || "InboxPilot <onboarding@resend.dev>",
+			to: [email],
+			subject: "Your InboxPilot API Key",
+			html: apiKeyEmailTemplate(token, name),
+		});
+	} catch {
+		return json(500, {
+			error: "Failed to send API key email. Please try again.",
+		});
 	}
 
-	// Generate new session token with 30-day expiry
-	const sessionToken = generateSessionToken();
-	const now = new Date().toISOString();
-	const ttl = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60;
-
-	await db.send(
-		new PutCommand({
-			TableName: process.env.APIKEYS_TABLE,
-			Item: { pk: sessionToken, userId: email, createdAt: now, ttl },
-		}),
-	);
-	await db.send(
-		new PutCommand({
-			TableName: process.env.APIKEYS_TABLE,
-			Item: { pk: `session#${email}`, sessionToken, createdAt: now, ttl },
-		}),
-	);
-
-	return json(200, {
-		message: "Verified successfully",
-		email,
-		sessionToken,
-		createdAt: now,
-		expiresIn: "30 days",
-	});
+	return json(200, { message: "API key sent to your email", email });
 };

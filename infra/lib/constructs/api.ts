@@ -13,6 +13,7 @@ export interface ApiProps {
 		authLogin: lambda.Function;
 		authVerify: lambda.Function;
 		connectGmail: lambda.Function;
+		apiKeys: lambda.Function;
 	};
 }
 
@@ -20,6 +21,13 @@ export interface ApiResult {
 	httpApi: apigwv2.HttpApi;
 	domainName: apigwv2.DomainName;
 }
+
+const METHOD_MAP: Record<string, apigwv2.HttpMethod> = {
+	GET: apigwv2.HttpMethod.GET,
+	POST: apigwv2.HttpMethod.POST,
+	PATCH: apigwv2.HttpMethod.PATCH,
+	DELETE: apigwv2.HttpMethod.DELETE,
+};
 
 export function createApi(scope: cdk.Stack, props: ApiProps): ApiResult {
 	const domainName = new apigwv2.DomainName(scope, "InboxPilotDomain", {
@@ -39,7 +47,7 @@ export function createApi(scope: cdk.Stack, props: ApiProps): ApiResult {
 	});
 
 	const routes: Array<{
-		method: "GET" | "POST";
+		method: string;
 		path: string;
 		fn: lambda.Function;
 		name: string;
@@ -69,14 +77,36 @@ export function createApi(scope: cdk.Stack, props: ApiProps): ApiResult {
 			fn: props.lambdas.connectGmail,
 			name: "ConnectGmail",
 		},
+		{
+			method: "GET",
+			path: "/keys",
+			fn: props.lambdas.apiKeys,
+			name: "ApiKeysList",
+		},
+		{
+			method: "POST",
+			path: "/keys",
+			fn: props.lambdas.apiKeys,
+			name: "ApiKeysCreate",
+		},
+		{
+			method: "PATCH",
+			path: "/keys",
+			fn: props.lambdas.apiKeys,
+			name: "ApiKeysUpdate",
+		},
+		{
+			method: "DELETE",
+			path: "/keys",
+			fn: props.lambdas.apiKeys,
+			name: "ApiKeysDelete",
+		},
 	];
 
 	for (const route of routes) {
-		const httpMethod =
-			route.method === "GET" ? apigwv2.HttpMethod.GET : apigwv2.HttpMethod.POST;
 		httpApi.addRoutes({
 			path: route.path,
-			methods: [httpMethod],
+			methods: [METHOD_MAP[route.method]],
 			integration: new integrations.HttpLambdaIntegration(
 				`${route.name}Integration`,
 				route.fn,

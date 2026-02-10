@@ -23,7 +23,7 @@ export class InfraStack extends cdk.Stack {
 		new cdk.CfnOutput(this, "ApiUrl", { value: `https://${DOMAIN}` });
 		new cdk.CfnOutput(this, "ApiGatewayDomainTarget", {
 			value: api.domainName.regionalDomainName,
-			description: "Add this as CNAME target in Cloudflare for " + DOMAIN,
+			description: `Add this as CNAME target in Cloudflare for ${DOMAIN}`,
 		});
 		new cdk.CfnOutput(this, "CertificateArn", {
 			value: certificate.certificateArn,

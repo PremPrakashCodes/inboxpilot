@@ -110,7 +110,7 @@ paths:
 
   /auth/verify:
     post:
-      summary: Verify OTP and get session token
+      summary: Verify OTP and receive API key via email
       operationId: authVerify
       requestBody:
         required: true
@@ -127,13 +127,9 @@ paths:
                 otp:
                   type: string
                   example: "123456"
-                new:
-                  type: boolean
-                  description: Set true to force a new session token
-                  default: false
       responses:
         "200":
-          description: Verified successfully
+          description: API key sent to email
           content:
             application/json:
               schema:
@@ -141,21 +137,10 @@ paths:
                 properties:
                   message:
                     type: string
-                    example: Verified successfully
+                    example: API key sent to your email
                   email:
                     type: string
                     example: user@example.com
-                  sessionToken:
-                    type: string
-                    format: uuid
-                    example: a1b2c3d4-e5f6-7890-abcd-ef1234567890
-                  createdAt:
-                    type: string
-                    format: date-time
-                    example: "2026-02-10T00:00:00.000Z"
-                  expiresIn:
-                    type: string
-                    example: 30 days
         "400":
           description: Missing fields
           content:
@@ -172,6 +157,183 @@ paths:
                 $ref: "#/components/schemas/Error"
               example:
                 error: Invalid or expired OTP
+
+  /keys:
+    get:
+      summary: List all API keys
+      operationId: listApiKeys
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: List of API keys
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  keys:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/ApiKeyInfo"
+        "401":
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    post:
+      summary: Create a new API key
+      operationId: createApiKey
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, expiresIn]
+              properties:
+                name:
+                  type: string
+                  example: Production
+                expiresIn:
+                  description: "Preset: 1d, 7d, 1m, never — or number of days"
+                  oneOf:
+                    - type: string
+                      enum: [1d, 7d, 1m, never]
+                    - type: integer
+                      example: 90
+      responses:
+        "201":
+          description: API key created and sent to email
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: API key created and sent to your email
+                  keyId:
+                    type: string
+                    format: uuid
+                  name:
+                    type: string
+                    example: Production
+                  expiresAt:
+                    type: string
+                    example: "2026-03-12T00:00:00.000Z"
+        "400":
+          description: Invalid input
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    patch:
+      summary: Update an API key
+      operationId: updateApiKey
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [keyId]
+              properties:
+                keyId:
+                  type: string
+                  format: uuid
+                name:
+                  type: string
+                  example: Staging
+                expiresIn:
+                  description: "Preset: 1d, 7d, 1m, never — or number of days"
+                  oneOf:
+                    - type: string
+                      enum: [1d, 7d, 1m, never]
+                    - type: integer
+                      example: 90
+      responses:
+        "200":
+          description: API key updated
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: API key updated
+                  keyId:
+                    type: string
+                    format: uuid
+        "404":
+          description: API key not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      summary: Delete an API key
+      operationId: deleteApiKey
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [keyId]
+              properties:
+                keyId:
+                  type: string
+                  format: uuid
+      responses:
+        "200":
+          description: API key deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: API key deleted
+                  keyId:
+                    type: string
+                    format: uuid
+        "404":
+          description: API key not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 
   /connect/gmail:
     get:
@@ -217,7 +379,7 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      description: Session token from /auth/verify
+      description: API key from /auth/verify or /api-keys
 
   schemas:
     Error:
@@ -225,3 +387,22 @@ components:
       properties:
         error:
           type: string
+
+    ApiKeyInfo:
+      type: object
+      properties:
+        keyId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: Production
+        prefix:
+          type: string
+          example: "a1b2c3d4..."
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          example: "2026-03-12T00:00:00.000Z"
