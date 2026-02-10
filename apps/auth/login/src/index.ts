@@ -1,8 +1,20 @@
-import { Resend } from "resend";
 import { PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
 import { db, json, parseBody, generateOTP } from "@inboxpilot/core";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+async function sendEmail(opts: { from: string; to: string[]; subject: string; html: string }) {
+  const res = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(opts),
+  });
+  if (!res.ok) {
+    const body = await res.json();
+    throw new Error(`Resend error: ${body.message ?? res.statusText}`);
+  }
+}
 
 function otpEmail(otp: string) {
   return `
@@ -59,14 +71,12 @@ export const handler = async (event: { body?: string }) => {
     }),
   );
 
-  const { error } = await resend.emails.send({
+  await sendEmail({
     from: process.env.EMAIL_FROM || "InboxPilot <onboarding@resend.dev>",
     to: [email],
     subject: `${otp} — Your InboxPilot verification code`,
     html: otpEmail(otp),
   });
-
-  if (error) throw new Error(`Resend error: ${error.message}`);
 
   return json(200, { message: "OTP sent to your email", email });
 };
