@@ -75,7 +75,7 @@ const handleRedirect = withAuth(
 				"https://www.googleapis.com/auth/gmail.modify",
 			],
 		});
-		return { statusCode: 302, headers: { Location: url } };
+		return json(200, { url });
 	},
 );
 

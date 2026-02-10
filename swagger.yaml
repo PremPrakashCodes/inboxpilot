@@ -341,30 +341,41 @@ paths:
       operationId: connectGmail
       security:
         - bearerAuth: []
+      parameters:
+        - name: code
+          in: query
+          description: OAuth authorization code (sent by Google callback)
+          schema:
+            type: string
+        - name: state
+          in: query
+          description: OAuth state parameter (sent by Google callback)
+          schema:
+            type: string
       responses:
-        "302":
-          description: Redirects to Google consent screen
-          headers:
-            Location:
-              schema:
-                type: string
-                format: uri
         "200":
-          description: Gmail connected (returned after OAuth callback)
+          description: Returns OAuth URL (no query params) or Gmail connected (callback with code & state)
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  message:
-                    type: string
-                    example: Gmail connected successfully
-                  userId:
-                    type: string
-                    example: user@example.com
-                  gmailEmail:
-                    type: string
-                    example: user.work@gmail.com
+                oneOf:
+                  - type: object
+                    properties:
+                      url:
+                        type: string
+                        format: uri
+                        example: "https://accounts.google.com/o/oauth2/v2/auth?..."
+                  - type: object
+                    properties:
+                      message:
+                        type: string
+                        example: Gmail connected successfully
+                      userId:
+                        type: string
+                        example: user@example.com
+                      gmailEmail:
+                        type: string
+                        example: user.work@gmail.com
         "401":
           description: Missing or invalid token
           content:
@@ -372,7 +383,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
               example:
-                error: "Authorization header required (Bearer <sessionToken>)"
+                error: "Authorization header required (Bearer <token>)"
 
 components:
   securitySchemes:

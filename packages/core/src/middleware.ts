@@ -24,7 +24,7 @@ export function withAuth(handler: AuthHandler): Handler {
 		const token = parseBearerToken(event);
 		if (!token) {
 			return json(401, {
-				error: "Authorization header required (Bearer <sessionToken>)",
+				error: "Authorization header required (Bearer <token>)",
 			});
 		}
 
