@@ -11,7 +11,27 @@ function getOAuth2Client() {
 	);
 }
 
-// Google OAuth callback — no Bearer auth needed (uses state param)
+// GET /connect/gmail — returns OAuth URL (Bearer auth required)
+const handleConnect = withAuth(
+	async (_event: AuthenticatedEvent, { userId }: AuthContext) => {
+		const stateParam = Buffer.from(JSON.stringify({ userId })).toString(
+			"base64url",
+		);
+		const url = getOAuth2Client().generateAuthUrl({
+			access_type: "offline",
+			prompt: "consent",
+			state: stateParam,
+			scope: [
+				"https://www.googleapis.com/auth/gmail.readonly",
+				"https://www.googleapis.com/auth/gmail.send",
+				"https://www.googleapis.com/auth/gmail.modify",
+			],
+		});
+		return json(200, { url });
+	},
+);
+
+// GET /auth/gmail/callback — handles OAuth callback (no Bearer auth)
 async function handleCallback(event: AuthenticatedEvent) {
 	const { code, state } = event.queryStringParameters ?? {};
 	if (!code || !state) return json(400, { error: "Missing OAuth parameters" });
@@ -24,7 +44,16 @@ async function handleCallback(event: AuthenticatedEvent) {
 	}
 
 	const oauth2Client = getOAuth2Client();
-	const { tokens } = await oauth2Client.getToken(code);
+
+	// biome-ignore lint/suspicious/noExplicitAny: googleapis overload types
+	let tokens: any;
+	try {
+		const result = await oauth2Client.getToken(code);
+		tokens = result.tokens;
+	} catch {
+		return json(400, { error: "Invalid or expired authorization code" });
+	}
+
 	oauth2Client.setCredentials(tokens);
 
 	const oauth2 = google.oauth2({ version: "v2", auth: oauth2Client });
@@ -59,29 +88,10 @@ async function handleCallback(event: AuthenticatedEvent) {
 	});
 }
 
-// Initial request — protected with Bearer token
-const handleRedirect = withAuth(
-	async (_event: AuthenticatedEvent, { userId }: AuthContext) => {
-		const stateParam = Buffer.from(JSON.stringify({ userId })).toString(
-			"base64url",
-		);
-		const url = getOAuth2Client().generateAuthUrl({
-			access_type: "offline",
-			prompt: "consent",
-			state: stateParam,
-			scope: [
-				"https://www.googleapis.com/auth/gmail.readonly",
-				"https://www.googleapis.com/auth/gmail.send",
-				"https://www.googleapis.com/auth/gmail.modify",
-			],
-		});
-		return json(200, { url });
-	},
-);
-
 export const handler = async (event: AuthenticatedEvent) => {
-	if (event.queryStringParameters?.code && event.queryStringParameters?.state) {
+	const path = event.requestContext?.http?.path || "";
+	if (path.includes("/auth/gmail/callback")) {
 		return handleCallback(event);
 	}
-	return handleRedirect(event);
+	return handleConnect(event);
 };

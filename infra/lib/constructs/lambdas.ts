@@ -93,7 +93,7 @@ export function createLambdas(
 		environment: {
 			GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID || "",
 			GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET || "",
-			GOOGLE_REDIRECT_URI: `https://${props.domain}/connect/gmail`,
+			GOOGLE_REDIRECT_URI: `https://${props.domain}/auth/gmail/callback`,
 			ACCOUNTS_TABLE: props.tables.accounts.tableName,
 			APIKEYS_TABLE: props.tables.apikeys.tableName,
 		},

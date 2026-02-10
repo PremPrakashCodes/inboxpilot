@@ -337,47 +337,67 @@ paths:
 
   /connect/gmail:
     get:
-      summary: Connect Gmail account via Google OAuth
+      summary: Get Google OAuth URL
       operationId: connectGmail
+      description: Returns a URL to redirect the user to Google's consent screen. Open this URL in a browser.
       security:
         - bearerAuth: []
+      responses:
+        "200":
+          description: OAuth URL to open in browser
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                    example: "https://accounts.google.com/o/oauth2/v2/auth?..."
+        "401":
+          description: Missing or invalid token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /auth/gmail/callback:
+    get:
+      summary: Gmail OAuth callback
+      operationId: gmailCallback
+      description: Google redirects here after user consents. Do not call directly.
       parameters:
         - name: code
           in: query
-          description: OAuth authorization code (sent by Google callback)
+          required: true
+          description: OAuth authorization code from Google
           schema:
             type: string
         - name: state
           in: query
-          description: OAuth state parameter (sent by Google callback)
+          required: true
+          description: Base64url-encoded state containing userId
           schema:
             type: string
       responses:
         "200":
-          description: Returns OAuth URL (no query params) or Gmail connected (callback with code & state)
+          description: Gmail account connected successfully
           content:
             application/json:
               schema:
-                oneOf:
-                  - type: object
-                    properties:
-                      url:
-                        type: string
-                        format: uri
-                        example: "https://accounts.google.com/o/oauth2/v2/auth?..."
-                  - type: object
-                    properties:
-                      message:
-                        type: string
-                        example: Gmail connected successfully
-                      userId:
-                        type: string
-                        example: user@example.com
-                      gmailEmail:
-                        type: string
-                        example: user.work@gmail.com
-        "401":
-          description: Missing or invalid token
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: Gmail connected successfully
+                  userId:
+                    type: string
+                    example: user@example.com
+                  gmailEmail:
+                    type: string
+                    example: user.work@gmail.com
+        "400":
+          description: Invalid or expired authorization code
           content:
             application/json:
               schema:

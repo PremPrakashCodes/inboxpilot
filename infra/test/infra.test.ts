@@ -153,6 +153,12 @@ test("GET /connect/gmail route exists", () => {
 	});
 });
 
+test("GET /auth/gmail/callback route exists", () => {
+	template.hasResourceProperties("AWS::ApiGatewayV2::Route", {
+		RouteKey: "GET /auth/gmail/callback",
+	});
+});
+
 test("GET /keys route exists", () => {
 	template.hasResourceProperties("AWS::ApiGatewayV2::Route", {
 		RouteKey: "GET /keys",

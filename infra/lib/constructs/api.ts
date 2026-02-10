@@ -79,6 +79,12 @@ export function createApi(scope: cdk.Stack, props: ApiProps): ApiResult {
 		},
 		{
 			method: "GET",
+			path: "/auth/gmail/callback",
+			fn: props.lambdas.connectGmail,
+			name: "GmailCallback",
+		},
+		{
+			method: "GET",
 			path: "/keys",
 			fn: props.lambdas.apiKeys,
 			name: "ApiKeysList",
