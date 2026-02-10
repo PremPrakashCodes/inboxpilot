@@ -399,7 +399,7 @@ components:
           example: Production
         prefix:
           type: string
-          example: "a1b2c3d4..."
+          example: "a1b2c3d4...z9y8"
         createdAt:
           type: string
           format: date-time

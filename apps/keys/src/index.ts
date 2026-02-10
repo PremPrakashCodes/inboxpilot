@@ -107,7 +107,7 @@ async function listKeys(_event: AuthenticatedEvent, userId: string) {
 		.map((item) => ({
 			keyId: item.keyId,
 			name: item.name,
-			prefix: `${item.pk.slice(0, 8)}...`,
+			prefix: `${item.pk.slice(0, 8)}...${item.pk.slice(-4)}`,
 			createdAt: item.createdAt,
 			expiresAt: item.expiresAt || "never",
 		}));
