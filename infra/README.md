@@ -1,14 +1,56 @@
-# Welcome to your CDK TypeScript project
+# InboxPilot Infrastructure
 
-This is a blank project for CDK development with TypeScript.
+AWS CDK v2 stack for InboxPilot. Deploys Lambda functions, API Gateway v2, DynamoDB tables, and IAM policies.
 
-The `cdk.json` file tells the CDK Toolkit how to execute your app.
+## Resources
 
-## Useful commands
+### DynamoDB Tables
+- `inboxpilot-users` — user registration (PK: `pk`)
+- `inboxpilot-accounts` — multi-provider OAuth accounts (PK: `userId`, SK: `sk`)
+- `inboxpilot-apikeys` — API keys with GSI `userId-index` (PK: `pk`, TTL: `ttl`)
+- `inboxpilot-otp` — OTP codes with TTL auto-expiry (PK: `pk`, TTL: `ttl`)
 
-* `npm run build`   compile typescript to js
-* `npm run watch`   watch for changes and compile
-* `npm run test`    perform the jest unit tests
-* `npx cdk deploy`  deploy this stack to your default AWS account/region
-* `npx cdk diff`    compare deployed stack with current state
-* `npx cdk synth`   emits the synthesized CloudFormation template
+### Lambda Functions
+- `inboxpilot-docs` — Swagger UI
+- `inboxpilot-auth-register` — user registration
+- `inboxpilot-auth-login` — OTP email sender
+- `inboxpilot-auth-verify` — OTP verification + API key creation
+- `inboxpilot-connect-gmail` — Google OAuth URL generator
+- `inboxpilot-gmail-callback` — Google OAuth callback handler
+- `inboxpilot-accounts` — list connected accounts
+- `inboxpilot-api-keys` — API key CRUD
+
+### API Gateway
+- HTTP API v2 with custom domain and CORS
+- ACM certificate for TLS
+- All routes mapped to individual Lambda integrations
+
+### IAM
+- Shared `AWSLambdaBasicExecutionRole` across all Lambdas
+- Inline DynamoDB policy for PutItem, GetItem, UpdateItem, DeleteItem, Query
+
+## Structure
+
+```
+infra/
+  lib/
+    infra-stack.ts           # Main stack
+    constructs/
+      tables.ts              # DynamoDB table definitions
+      lambdas.ts             # Lambda function definitions + IAM
+      api.ts                 # API Gateway + routes
+  test/
+    infra.test.ts            # CDK assertions (27 tests)
+```
+
+## Commands
+
+```bash
+npx jest              # Run infrastructure tests
+npx cdk synth         # Synthesize CloudFormation template
+npx cdk deploy        # Deploy stack
+npx cdk diff          # Compare deployed vs current
+npx cdk destroy       # Tear down stack
+```
+
+Must run from the `infra/` directory.
