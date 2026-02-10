@@ -379,7 +379,7 @@ components:
     bearerAuth:
       type: http
       scheme: bearer
-      description: API key from /auth/verify or /api-keys
+      description: API key from /auth/verify or /keys
 
   schemas:
     Error:
