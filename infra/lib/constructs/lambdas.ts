@@ -103,7 +103,7 @@ export function createLambdas(
 		functionName: "inboxpilot-api-keys",
 		runtime: lambda.Runtime.NODEJS_22_X,
 		handler: "index.handler",
-		code: lambda.Code.fromAsset(path.join(APPS, "api-keys/dist")),
+		code: lambda.Code.fromAsset(path.join(APPS, "keys/dist")),
 		role,
 		timeout: cdk.Duration.seconds(10),
 		environment: {

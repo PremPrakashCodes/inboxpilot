@@ -18,7 +18,7 @@ apps/
   auth/register/   # POST /auth/register
   auth/login/      # POST /auth/login — sends OTP via email
   auth/verify/     # POST /auth/verify — sends API key via email
-  api-keys/        # CRUD /keys — manage API keys (Bearer auth)
+  keys/            # CRUD /keys — manage API keys (Bearer auth)
   connect/gmail/   # GET  /connect/gmail — Google OAuth flow
   docs/            # GET  /docs — Swagger UI
 packages/

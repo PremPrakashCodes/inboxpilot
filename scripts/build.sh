@@ -14,7 +14,7 @@ LAMBDAS=(
   "apps/auth/login"
   "apps/auth/verify"
   "apps/connect/gmail"
-  "apps/api-keys"
+  "apps/keys"
 )
 
 for app in "${LAMBDAS[@]}"; do
