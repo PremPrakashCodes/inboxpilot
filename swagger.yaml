@@ -8,22 +8,6 @@ servers:
   - url: https://__DOMAIN__
 
 paths:
-  /health:
-    get:
-      summary: Health check
-      operationId: healthCheck
-      responses:
-        "200":
-          description: Service is healthy
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  status:
-                    type: string
-                    example: ok
-
   /auth/register:
     post:
       summary: Register a new user

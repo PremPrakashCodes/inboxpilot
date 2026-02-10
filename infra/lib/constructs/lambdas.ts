@@ -16,7 +16,6 @@ export interface LambdasProps {
 }
 
 export interface LambdasResult {
-  health: lambda.Function;
   docs: lambda.Function;
   authRegister: lambda.Function;
   authLogin: lambda.Function;
@@ -27,17 +26,9 @@ export interface LambdasResult {
 export function createLambdas(scope: cdk.Stack, props: LambdasProps): LambdasResult {
   const role = iam.Role.fromRoleName(scope, "LambdaExecutionRole", "AWSLambdaBasicExecutionRole");
 
-  const health = new lambda.Function(scope, "InboxPilotHealthFn", {
-    functionName: "inboxpilot-health",
-    runtime: lambda.Runtime.NODEJS_20_X,
-    handler: "index.handler",
-    code: lambda.Code.fromAsset(path.join(APPS, "health/dist")),
-    role,
-  });
-
   const docs = new lambda.Function(scope, "InboxPilotDocsFn", {
     functionName: "inboxpilot-docs",
-    runtime: lambda.Runtime.NODEJS_20_X,
+    runtime: lambda.Runtime.NODEJS_22_X,
     handler: "index.handler",
     code: lambda.Code.fromAsset(path.join(APPS, "docs/dist")),
     role,
@@ -45,7 +36,7 @@ export function createLambdas(scope: cdk.Stack, props: LambdasProps): LambdasRes
 
   const authRegister = new lambda.Function(scope, "InboxPilotAuthRegisterFn", {
     functionName: "inboxpilot-auth-register",
-    runtime: lambda.Runtime.NODEJS_20_X,
+    runtime: lambda.Runtime.NODEJS_22_X,
     handler: "index.handler",
     code: lambda.Code.fromAsset(path.join(APPS, "auth/register/dist")),
     role,
@@ -57,7 +48,7 @@ export function createLambdas(scope: cdk.Stack, props: LambdasProps): LambdasRes
 
   const authLogin = new lambda.Function(scope, "InboxPilotAuthLoginFn", {
     functionName: "inboxpilot-auth-login",
-    runtime: lambda.Runtime.NODEJS_20_X,
+    runtime: lambda.Runtime.NODEJS_22_X,
     handler: "index.handler",
     code: lambda.Code.fromAsset(path.join(APPS, "auth/login/dist")),
     role,
@@ -72,7 +63,7 @@ export function createLambdas(scope: cdk.Stack, props: LambdasProps): LambdasRes
 
   const authVerify = new lambda.Function(scope, "InboxPilotAuthVerifyFn", {
     functionName: "inboxpilot-auth-verify",
-    runtime: lambda.Runtime.NODEJS_20_X,
+    runtime: lambda.Runtime.NODEJS_22_X,
     handler: "index.handler",
     code: lambda.Code.fromAsset(path.join(APPS, "auth/verify/dist")),
     role,
@@ -84,7 +75,7 @@ export function createLambdas(scope: cdk.Stack, props: LambdasProps): LambdasRes
 
   const connectGmail = new lambda.Function(scope, "InboxPilotConnectGmailFn", {
     functionName: "inboxpilot-connect-gmail",
-    runtime: lambda.Runtime.NODEJS_20_X,
+    runtime: lambda.Runtime.NODEJS_22_X,
     handler: "index.handler",
     code: lambda.Code.fromAsset(path.join(APPS, "connect/gmail/dist")),
     role,
@@ -124,5 +115,5 @@ export function createLambdas(scope: cdk.Stack, props: LambdasProps): LambdasRes
     },
   });
 
-  return { health, docs, authRegister, authLogin, authVerify, connectGmail };
+  return { docs, authRegister, authLogin, authVerify, connectGmail };
 }

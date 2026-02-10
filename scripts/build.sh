@@ -10,7 +10,6 @@ cd "$ROOT/packages/core" && npx tsc
 
 # Bundle each Lambda
 LAMBDAS=(
-  "apps/health"
   "apps/auth/register"
   "apps/auth/login"
   "apps/auth/verify"
@@ -22,7 +21,7 @@ for app in "${LAMBDAS[@]}"; do
   $ESBUILD "$ROOT/$app/src/index.ts" \
     --bundle \
     --platform=node \
-    --target=node20 \
+    --target=node22 \
     --outfile="$ROOT/$app/dist/index.js" \
     --external:@aws-sdk/* \
     --external:googleapis
@@ -35,7 +34,7 @@ SPEC=$(node -e "const yaml=require('yaml');const fs=require('fs');const raw=fs.r
 $ESBUILD "$ROOT/apps/docs/src/index.ts" \
   --bundle \
   --platform=node \
-  --target=node20 \
+  --target=node22 \
   --outfile="$ROOT/apps/docs/dist/index.js" \
   --define:SPEC="$SPEC"
 
