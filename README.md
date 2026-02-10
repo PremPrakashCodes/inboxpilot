@@ -34,13 +34,13 @@ cp .env.example .env  # fill in values
 
 ### Environment Variables
 
-| Variable | Description |
-|---|---|
-| `INBOXPILOT_DOMAIN` | Custom domain (e.g. `inboxpilot.premprakash.dev`) |
-| `GOOGLE_CLIENT_ID` | Google OAuth client ID |
-| `GOOGLE_CLIENT_SECRET` | Google OAuth client secret |
-| `RESEND_API_KEY` | Resend API key for sending emails |
-| `EMAIL_FROM` | Sender address (e.g. `InboxPilot <no-reply@example.com>`) |
+| Variable                | Description                                          |
+| ----------------------- | ---------------------------------------------------- |
+| `INBOXPILOT_DOMAIN`     | Custom domain (e.g. `inboxpilot.premprakash.dev`)    |
+| `GOOGLE_CLIENT_ID`      | Google OAuth client ID                               |
+| `GOOGLE_CLIENT_SECRET`  | Google OAuth client secret                           |
+| `RESEND_API_KEY`        | Resend API key for sending emails                    |
+| `EMAIL_FROM`            | Sender address (e.g. `InboxPilot <no-reply@...>`)    |
 
 ## Scripts
 
