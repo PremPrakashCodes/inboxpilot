@@ -1,23 +1,28 @@
-import { PutCommand, GetCommand } from "@aws-sdk/lib-dynamodb";
-import { db, json, parseBody, generateOTP } from "@inboxpilot/core";
+import { GetCommand, PutCommand } from "@aws-sdk/lib-dynamodb";
+import { db, generateOTP, json, parseBody } from "@inboxpilot/core";
 
-async function sendEmail(opts: { from: string; to: string[]; subject: string; html: string }) {
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(opts),
-  });
-  if (!res.ok) {
-    const body = await res.json();
-    throw new Error(`Resend error: ${body.message ?? res.statusText}`);
-  }
+async function sendEmail(opts: {
+	from: string;
+	to: string[];
+	subject: string;
+	html: string;
+}) {
+	const res = await fetch("https://api.resend.com/emails", {
+		method: "POST",
+		headers: {
+			Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
+			"Content-Type": "application/json",
+		},
+		body: JSON.stringify(opts),
+	});
+	if (!res.ok) {
+		const body = await res.json();
+		throw new Error(`Resend error: ${body.message ?? res.statusText}`);
+	}
 }
 
 function otpEmail(otp: string) {
-  return `
+	return `
 <!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -48,35 +53,35 @@ function otpEmail(otp: string) {
 }
 
 export const handler = async (event: { body?: string }) => {
-  const body = parseBody(event);
-  if (!body) return json(400, { error: "Invalid JSON" });
+	const body = parseBody(event);
+	if (!body) return json(400, { error: "Invalid JSON" });
 
-  const { email } = body as { email?: string };
-  if (!email) return json(400, { error: "email is required" });
+	const { email } = body as { email?: string };
+	if (!email) return json(400, { error: "email is required" });
 
-  const user = await db.send(
-    new GetCommand({ TableName: process.env.USERS_TABLE, Key: { pk: email } }),
-  );
-  if (!user.Item)
-    return json(404, { error: "User not found. Please register first." });
+	const user = await db.send(
+		new GetCommand({ TableName: process.env.USERS_TABLE, Key: { pk: email } }),
+	);
+	if (!user.Item)
+		return json(404, { error: "User not found. Please register first." });
 
-  const otp = generateOTP();
-  const now = new Date().toISOString();
-  const ttl = Math.floor(Date.now() / 1000) + 10 * 60;
+	const otp = generateOTP();
+	const now = new Date().toISOString();
+	const ttl = Math.floor(Date.now() / 1000) + 10 * 60;
 
-  await db.send(
-    new PutCommand({
-      TableName: process.env.APIKEYS_TABLE,
-      Item: { pk: `otp#${email}`, otp, createdAt: now, ttl },
-    }),
-  );
+	await db.send(
+		new PutCommand({
+			TableName: process.env.APIKEYS_TABLE,
+			Item: { pk: `otp#${email}`, otp, createdAt: now, ttl },
+		}),
+	);
 
-  await sendEmail({
-    from: process.env.EMAIL_FROM || "InboxPilot <onboarding@resend.dev>",
-    to: [email],
-    subject: `${otp} — Your InboxPilot verification code`,
-    html: otpEmail(otp),
-  });
+	await sendEmail({
+		from: process.env.EMAIL_FROM || "InboxPilot <onboarding@resend.dev>",
+		to: [email],
+		subject: `${otp} — Your InboxPilot verification code`,
+		html: otpEmail(otp),
+	});
 
-  return json(200, { message: "OTP sent to your email", email });
+	return json(200, { message: "OTP sent to your email", email });
 };

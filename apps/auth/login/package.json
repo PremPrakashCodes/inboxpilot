@@ -1,7 +1,7 @@
 {
-  "name": "@inboxpilot/auth-login",
-  "version": "1.0.0",
-  "private": true,
-  "main": "index.js",
-  "dependencies": {}
+	"name": "@inboxpilot/auth-login",
+	"version": "1.0.0",
+	"private": true,
+	"main": "index.js",
+	"dependencies": {}
 }

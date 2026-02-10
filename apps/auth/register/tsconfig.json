@@ -1,4 +1,4 @@
 {
-  "extends": "@inboxpilot/tsconfig/base.json",
-  "compilerOptions": { "outDir": "dist", "rootDir": "src" }
+	"extends": "@inboxpilot/tsconfig/base.json",
+	"compilerOptions": { "outDir": "dist", "rootDir": "src" }
 }

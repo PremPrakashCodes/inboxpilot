@@ -1,25 +1,29 @@
 {
-  "name": "inboxpilot",
-  "version": "1.0.0",
-  "private": true,
-  "workspaces": [
-    "apps/*",
-    "apps/auth/*",
-    "apps/connect/*",
-    "infra",
-    "packages/*"
-  ],
-  "scripts": {
-    "test": "npm test --workspaces --if-present",
-    "build": "bash scripts/build.sh",
-    "deploy": "npm run build && cd infra && npx cdk deploy --require-approval never"
-  },
-  "license": "ISC",
-  "devDependencies": {
-    "@aws-sdk/client-dynamodb": "^3.986.0",
-    "@aws-sdk/lib-dynamodb": "^3.986.0",
-    "esbuild": "^0.27.3",
-    "typescript": "^5.9.3",
-    "yaml": "^2.8.2"
-  }
+	"name": "inboxpilot",
+	"version": "1.0.0",
+	"private": true,
+	"workspaces": [
+		"apps/*",
+		"apps/auth/*",
+		"apps/connect/*",
+		"infra",
+		"packages/*"
+	],
+	"scripts": {
+		"test": "npm test --workspaces --if-present",
+		"format": "biome check --write .",
+		"build": "bash scripts/build.sh",
+		"deploy": "npm run build && cd infra && npx cdk deploy --require-approval never",
+		"prepare": "husky"
+	},
+	"license": "ISC",
+	"devDependencies": {
+		"@aws-sdk/client-dynamodb": "^3.986.0",
+		"@aws-sdk/lib-dynamodb": "^3.986.0",
+		"@biomejs/biome": "2.3.14",
+		"esbuild": "^0.27.3",
+		"husky": "^9.1.7",
+		"typescript": "^5.9.3",
+		"yaml": "^2.8.2"
+	}
 }

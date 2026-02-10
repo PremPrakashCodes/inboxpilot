@@ -1,10 +1,10 @@
 const spec = JSON.stringify(SPEC);
 
 export const handler = async () => {
-  return {
-    statusCode: 200,
-    headers: { "Content-Type": "text/html" },
-    body: `<!DOCTYPE html>
+	return {
+		statusCode: 200,
+		headers: { "Content-Type": "text/html" },
+		body: `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -26,5 +26,5 @@ export const handler = async () => {
   </script>
 </body>
 </html>`,
-  };
+	};
 };
