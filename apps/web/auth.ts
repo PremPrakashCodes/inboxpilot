@@ -13,7 +13,7 @@ const client = DynamoDBDocument.from(new DynamoDB({}), {
 });
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
-	adapter: DynamoDBAdapter(client),
+	adapter: DynamoDBAdapter(client, { tableName: "inboxpilot-auth" }),
 	providers: [
 		Resend({
 			from: process.env.EMAIL_FROM ?? "InboxPilot <onboarding@resend.dev>",

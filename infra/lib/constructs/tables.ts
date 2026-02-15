@@ -6,6 +6,7 @@ export interface TablesResult {
 	users: dynamodb.Table;
 	apikeys: dynamodb.Table;
 	otp: dynamodb.Table;
+	auth: dynamodb.Table;
 }
 
 export function createTables(scope: cdk.Stack): TablesResult {
@@ -46,5 +47,21 @@ export function createTables(scope: cdk.Stack): TablesResult {
 		removalPolicy: cdk.RemovalPolicy.DESTROY,
 	});
 
-	return { accounts, users, apikeys, otp };
+	const auth = new dynamodb.Table(scope, "InboxPilotAuth", {
+		tableName: "inboxpilot-auth",
+		partitionKey: { name: "pk", type: dynamodb.AttributeType.STRING },
+		sortKey: { name: "sk", type: dynamodb.AttributeType.STRING },
+		billingMode: dynamodb.BillingMode.PAY_PER_REQUEST,
+		timeToLiveAttribute: "expires",
+		removalPolicy: cdk.RemovalPolicy.RETAIN,
+	});
+
+	auth.addGlobalSecondaryIndex({
+		indexName: "GSI1",
+		partitionKey: { name: "GSI1PK", type: dynamodb.AttributeType.STRING },
+		sortKey: { name: "GSI1SK", type: dynamodb.AttributeType.STRING },
+		projectionType: dynamodb.ProjectionType.ALL,
+	});
+
+	return { accounts, users, apikeys, otp, auth };
 }
