@@ -16,9 +16,7 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    environment:
-      name: production
-      url: https://${{ secrets.INBOXPILOT_DOMAIN }}
+    environment: production
     steps:
       - uses: actions/checkout@v4
 
