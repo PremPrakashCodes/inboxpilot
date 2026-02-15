@@ -1,14 +1,14 @@
 {
-	"name": "@inboxpilot/core",
+	"name": "@inboxpilot/api",
 	"version": "1.0.0",
 	"private": true,
-	"main": "dist/index.js",
-	"types": "dist/index.d.ts",
 	"scripts": {
 		"build": "tsc",
+		"typecheck": "tsc --noEmit",
 		"test": "vitest run"
 	},
 	"dependencies": {
-		"zod": "^4.3.6"
+		"@inboxpilot/core": "*",
+		"googleapis": "^144.0.0"
 	}
 }

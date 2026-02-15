@@ -1,11 +1,30 @@
 {
 	"name": "inboxpilot",
 	"version": "1.0.0",
+	"description": "Serverless email management API with OTP authentication, Gmail OAuth, and API key management",
 	"private": true,
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/PremPrakashCodes/inboxpilot.git"
+	},
+	"homepage": "https://github.com/PremPrakashCodes/inboxpilot#readme",
+	"bugs": {
+		"url": "https://github.com/PremPrakashCodes/inboxpilot/issues"
+	},
+	"keywords": [
+		"email",
+		"api",
+		"gmail",
+		"oauth",
+		"serverless",
+		"aws-lambda",
+		"dynamodb"
+	],
+	"engines": {
+		"node": ">=22"
+	},
 	"workspaces": [
 		"apps/*",
-		"apps/auth/*",
-		"apps/connect/*",
 		"infra",
 		"packages/*"
 	],
@@ -20,10 +39,16 @@
 	"devDependencies": {
 		"@aws-sdk/client-dynamodb": "^3.986.0",
 		"@aws-sdk/lib-dynamodb": "^3.986.0",
+		"@babel/core": "^7.29.0",
+		"@babel/preset-env": "^7.29.0",
+		"@babel/preset-typescript": "^7.28.5",
 		"@biomejs/biome": "2.3.14",
-		"esbuild": "^0.27.3",
+		"babel-loader": "^10.0.0",
 		"husky": "^9.1.7",
 		"typescript": "^5.9.3",
+		"vitest": "^4.0.18",
+		"webpack": "^5.105.2",
+		"webpack-cli": "^6.0.1",
 		"yaml": "^2.8.2"
 	}
 }

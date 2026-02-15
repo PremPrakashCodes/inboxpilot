@@ -2,61 +2,18 @@
 set -e
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
-ESBUILD="$ROOT/node_modules/.bin/esbuild"
+WEBPACK="$ROOT/node_modules/.bin/webpack"
 BUCKET="${LAMBDA_BUCKET:-lambda-dependencies-store}"
+DIST="$ROOT/apps/api/dist"
 
 # Build core package first
 echo "Building @inboxpilot/core..."
 cd "$ROOT/packages/core" && npx tsc
 
-# Lambda name → source path mapping
-declare -A LAMBDAS=(
-  [inboxpilot-auth-register]="apps/auth/register"
-  [inboxpilot-auth-login]="apps/auth/login"
-  [inboxpilot-auth-verify]="apps/auth/verify"
-  [inboxpilot-api-keys]="apps/keys"
-  [inboxpilot-accounts]="apps/accounts"
-)
-
-for name in "${!LAMBDAS[@]}"; do
-  app="${LAMBDAS[$name]}"
-  echo "Bundling $app..."
-  $ESBUILD "$ROOT/$app/src/index.ts" \
-    --bundle \
-    --platform=node \
-    --target=node22 \
-    --outfile="$ROOT/$app/dist/index.js" \
-    --external:@aws-sdk/*
-done
-
-# Bundle Gmail Lambdas (include googleapis)
-declare -A GMAIL_LAMBDAS=(
-  [inboxpilot-connect-gmail]="apps/connect/gmail"
-  [inboxpilot-gmail-callback]="apps/auth/gmail/callback"
-)
-
-for name in "${!GMAIL_LAMBDAS[@]}"; do
-  app="${GMAIL_LAMBDAS[$name]}"
-  echo "Bundling $app..."
-  $ESBUILD "$ROOT/$app/src/index.ts" \
-    --bundle \
-    --platform=node \
-    --target=node22 \
-    --outfile="$ROOT/$app/dist/index.js" \
-    --external:@aws-sdk/*
-done
-
-# Bundle docs Lambda with embedded swagger spec
-echo "Bundling apps/docs..."
-DOMAIN="${INBOXPILOT_DOMAIN:-example.com}"
-API_DOMAIN="api.${DOMAIN}"
-SPEC=$(node -e "const yaml=require('yaml');const fs=require('fs');const raw=fs.readFileSync('$ROOT/swagger.yaml','utf8').replace('__DOMAIN__','$API_DOMAIN');console.log(JSON.stringify(yaml.parse(raw)))")
-$ESBUILD "$ROOT/apps/docs/src/index.ts" \
-  --bundle \
-  --platform=node \
-  --target=node22 \
-  --outfile="$ROOT/apps/docs/dist/index.js" \
-  --define:SPEC="$SPEC"
+# Bundle all Lambdas with webpack + Babel
+echo "Bundling Lambdas with webpack..."
+cd "$ROOT"
+$WEBPACK --config webpack.config.js
 
 echo "Build complete."
 
@@ -66,25 +23,24 @@ if [ "$SKIP_UPLOAD" = "1" ]; then
   exit 0
 fi
 
-# Zip and upload each Lambda to S3 with readable names
+# Lambda names for upload
+LAMBDA_NAMES=(
+  inboxpilot-auth-register
+  inboxpilot-auth-login
+  inboxpilot-auth-verify
+  inboxpilot-api-keys
+  inboxpilot-accounts
+  inboxpilot-connect-gmail
+  inboxpilot-gmail-callback
+  inboxpilot-docs
+)
+
+# Zip and upload each Lambda to S3
 echo ""
 echo "Uploading to s3://$BUCKET..."
 
-ALL_LAMBDAS=(
-  "inboxpilot-docs:apps/docs"
-  "inboxpilot-auth-register:apps/auth/register"
-  "inboxpilot-auth-login:apps/auth/login"
-  "inboxpilot-auth-verify:apps/auth/verify"
-  "inboxpilot-api-keys:apps/keys"
-  "inboxpilot-accounts:apps/accounts"
-  "inboxpilot-connect-gmail:apps/connect/gmail"
-  "inboxpilot-gmail-callback:apps/auth/gmail/callback"
-)
-
-for entry in "${ALL_LAMBDAS[@]}"; do
-  name="${entry%%:*}"
-  app="${entry#*:}"
-  cd "$ROOT/$app/dist"
+for name in "${LAMBDA_NAMES[@]}"; do
+  cd "$DIST/$name"
   zip -qj "/tmp/$name.zip" index.js
   aws s3 cp "/tmp/$name.zip" "s3://$BUCKET/$name.zip" --quiet
   echo "  ✓ $name.zip"
