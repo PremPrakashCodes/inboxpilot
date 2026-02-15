@@ -45,6 +45,12 @@ export function createApi(scope: cdk.Stack, props: ApiProps): ApiResult {
 		apiName: "InboxPilot API",
 		description: "Public API for InboxPilot",
 		defaultDomainMapping: { domainName },
+		defaultIntegration: props.frontend
+			? new integrations.HttpLambdaIntegration(
+					"FrontendServerIntegration",
+					props.frontend.serverFn,
+				)
+			: undefined,
 		corsPreflight: {
 			allowOrigins: ["*"],
 			allowMethods: [apigwv2.CorsHttpMethod.ANY],
@@ -132,7 +138,7 @@ export function createApi(scope: cdk.Stack, props: ApiProps): ApiResult {
 		});
 	}
 
-	// Frontend routes — SSR Lambda as $default catch-all
+	// Frontend image optimization route
 	if (props.frontend) {
 		httpApi.addRoutes({
 			path: "/_next/image",
@@ -140,14 +146,6 @@ export function createApi(scope: cdk.Stack, props: ApiProps): ApiResult {
 			integration: new integrations.HttpLambdaIntegration(
 				"FrontendImageIntegration",
 				props.frontend.imageFn,
-			),
-		});
-
-		httpApi.addRoutes({
-			path: "/$default",
-			integration: new integrations.HttpLambdaIntegration(
-				"FrontendServerIntegration",
-				props.frontend.serverFn,
 			),
 		});
 	}
