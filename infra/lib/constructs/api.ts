@@ -1,14 +1,18 @@
 import type * as cdk from "aws-cdk-lib";
 import * as apigwv2 from "aws-cdk-lib/aws-apigatewayv2";
 import * as integrations from "aws-cdk-lib/aws-apigatewayv2-integrations";
-import type * as acm from "aws-cdk-lib/aws-certificatemanager";
 import type * as lambda from "aws-cdk-lib/aws-lambda";
 
-export interface ApiProps {
-	domain: string;
-	certificate: acm.Certificate;
-	apiDomain?: string;
-	apiCertificate?: acm.Certificate;
+const METHOD_MAP: Record<string, apigwv2.HttpMethod> = {
+	GET: apigwv2.HttpMethod.GET,
+	POST: apigwv2.HttpMethod.POST,
+	PATCH: apigwv2.HttpMethod.PATCH,
+	DELETE: apigwv2.HttpMethod.DELETE,
+};
+
+// --- Backend API (api.example.com) ---
+
+export interface BackendApiProps {
 	lambdas: {
 		docs: lambda.Function;
 		authRegister: lambda.Function;
@@ -19,42 +23,15 @@ export interface ApiProps {
 		accounts: lambda.Function;
 		apiKeys: lambda.Function;
 	};
-	frontend?: {
-		serverFn: lambda.Function;
-		imageFn: lambda.Function;
-		staticFn: lambda.Function;
-	};
 }
 
-export interface ApiResult {
-	httpApi: apigwv2.HttpApi;
-	domainName: apigwv2.DomainName;
-	apiDomainName?: apigwv2.DomainName;
-}
-
-const METHOD_MAP: Record<string, apigwv2.HttpMethod> = {
-	GET: apigwv2.HttpMethod.GET,
-	POST: apigwv2.HttpMethod.POST,
-	PATCH: apigwv2.HttpMethod.PATCH,
-	DELETE: apigwv2.HttpMethod.DELETE,
-};
-
-export function createApi(scope: cdk.Stack, props: ApiProps): ApiResult {
-	const domainName = new apigwv2.DomainName(scope, "InboxPilotDomain", {
-		domainName: props.domain,
-		certificate: props.certificate,
-	});
-
-	const httpApi = new apigwv2.HttpApi(scope, "InboxPilotApi", {
-		apiName: "InboxPilot API",
-		description: "Public API for InboxPilot",
-		defaultDomainMapping: { domainName },
-		defaultIntegration: props.frontend
-			? new integrations.HttpLambdaIntegration(
-					"FrontendServerIntegration",
-					props.frontend.serverFn,
-				)
-			: undefined,
+export function createBackendApi(
+	scope: cdk.Stack,
+	props: BackendApiProps,
+): { httpApi: apigwv2.HttpApi } {
+	const httpApi = new apigwv2.HttpApi(scope, "BackendApi", {
+		apiName: "InboxPilot Backend",
+		description: "Backend gateway for InboxPilot",
 		corsPreflight: {
 			allowOrigins: ["*"],
 			allowMethods: [apigwv2.CorsHttpMethod.ANY],
@@ -142,39 +119,52 @@ export function createApi(scope: cdk.Stack, props: ApiProps): ApiResult {
 		});
 	}
 
-	// Frontend routes
-	if (props.frontend) {
-		httpApi.addRoutes({
-			path: "/_next/image",
-			methods: [apigwv2.HttpMethod.GET],
-			integration: new integrations.HttpLambdaIntegration(
-				"FrontendImageIntegration",
-				props.frontend.imageFn,
-			),
-		});
+	return { httpApi };
+}
 
-		httpApi.addRoutes({
-			path: "/_next/static/{proxy+}",
-			methods: [apigwv2.HttpMethod.GET],
-			integration: new integrations.HttpLambdaIntegration(
-				"FrontendStaticIntegration",
-				props.frontend.staticFn,
-			),
-		});
-	}
+// --- Frontend Gateway (example.com) ---
 
-	// API subdomain (api.inboxpilot.premprakash.dev)
-	let apiDomainName: apigwv2.DomainName | undefined;
-	if (props.apiDomain && props.apiCertificate) {
-		apiDomainName = new apigwv2.DomainName(scope, "InboxPilotApiDomain", {
-			domainName: props.apiDomain,
-			certificate: props.apiCertificate,
-		});
-		new apigwv2.ApiMapping(scope, "ApiDomainMapping", {
-			api: httpApi,
-			domainName: apiDomainName,
-		});
-	}
+export interface FrontendGatewayProps {
+	domainName: apigwv2.DomainName;
+	frontend: {
+		serverFn: lambda.Function;
+		imageFn: lambda.Function;
+		staticFn: lambda.Function;
+	};
+}
 
-	return { httpApi, domainName, apiDomainName };
+export function createFrontendGateway(
+	scope: cdk.Stack,
+	props: FrontendGatewayProps,
+): { httpApi: apigwv2.HttpApi } {
+	// Keep construct ID "InboxPilotApi" to preserve existing CloudFormation resource
+	const httpApi = new apigwv2.HttpApi(scope, "InboxPilotApi", {
+		apiName: "InboxPilot Frontend",
+		description: "Frontend gateway for InboxPilot",
+		defaultDomainMapping: { domainName: props.domainName },
+		defaultIntegration: new integrations.HttpLambdaIntegration(
+			"FrontendServerIntegration",
+			props.frontend.serverFn,
+		),
+	});
+
+	httpApi.addRoutes({
+		path: "/_next/image",
+		methods: [apigwv2.HttpMethod.GET],
+		integration: new integrations.HttpLambdaIntegration(
+			"FrontendImageIntegration",
+			props.frontend.imageFn,
+		),
+	});
+
+	httpApi.addRoutes({
+		path: "/_next/static/{proxy+}",
+		methods: [apigwv2.HttpMethod.GET],
+		integration: new integrations.HttpLambdaIntegration(
+			"FrontendStaticIntegration",
+			props.frontend.staticFn,
+		),
+	});
+
+	return { httpApi };
 }
