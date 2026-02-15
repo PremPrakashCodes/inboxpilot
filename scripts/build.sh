@@ -48,8 +48,9 @@ done
 
 # Bundle docs Lambda with embedded swagger spec
 echo "Bundling apps/docs..."
-DOMAIN="${INBOXPILOT_DOMAIN:-inboxpilot.premprakash.dev}"
-SPEC=$(node -e "const yaml=require('yaml');const fs=require('fs');const raw=fs.readFileSync('$ROOT/swagger.yaml','utf8').replace('__DOMAIN__','$DOMAIN');console.log(JSON.stringify(yaml.parse(raw)))")
+DOMAIN="${INBOXPILOT_DOMAIN:-example.com}"
+API_DOMAIN="api.${DOMAIN}"
+SPEC=$(node -e "const yaml=require('yaml');const fs=require('fs');const raw=fs.readFileSync('$ROOT/swagger.yaml','utf8').replace('__DOMAIN__','$API_DOMAIN');console.log(JSON.stringify(yaml.parse(raw)))")
 $ESBUILD "$ROOT/apps/docs/src/index.ts" \
   --bundle \
   --platform=node \
