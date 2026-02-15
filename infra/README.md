@@ -101,6 +101,7 @@ Attach these AWS managed policies for a quick start:
 - `AmazonDynamoDBFullAccess`
 - `IAMFullAccess`
 - `AWSCertificateManagerFullAccess`
+- `AmazonSSMReadOnlyAccess`
 
 **Option B: Custom policy (least-privilege, recommended for production)**
 
