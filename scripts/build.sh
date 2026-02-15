@@ -3,21 +3,23 @@ set -e
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 ESBUILD="$ROOT/node_modules/.bin/esbuild"
+BUCKET="${LAMBDA_BUCKET:-lambda-dependencies-store}"
 
 # Build core package first
 echo "Building @inboxpilot/core..."
 cd "$ROOT/packages/core" && npx tsc
 
-# Bundle each Lambda
-LAMBDAS=(
-  "apps/auth/register"
-  "apps/auth/login"
-  "apps/auth/verify"
-  "apps/keys"
-  "apps/accounts"
+# Lambda name → source path mapping
+declare -A LAMBDAS=(
+  [inboxpilot-auth-register]="apps/auth/register"
+  [inboxpilot-auth-login]="apps/auth/login"
+  [inboxpilot-auth-verify]="apps/auth/verify"
+  [inboxpilot-api-keys]="apps/keys"
+  [inboxpilot-accounts]="apps/accounts"
 )
 
-for app in "${LAMBDAS[@]}"; do
+for name in "${!LAMBDAS[@]}"; do
+  app="${LAMBDAS[$name]}"
   echo "Bundling $app..."
   $ESBUILD "$ROOT/$app/src/index.ts" \
     --bundle \
@@ -28,13 +30,19 @@ for app in "${LAMBDAS[@]}"; do
 done
 
 # Bundle Gmail Lambdas (include googleapis)
-for gmail_app in "apps/connect/gmail" "apps/auth/gmail/callback"; do
-  echo "Bundling $gmail_app..."
-  $ESBUILD "$ROOT/$gmail_app/src/index.ts" \
+declare -A GMAIL_LAMBDAS=(
+  [inboxpilot-connect-gmail]="apps/connect/gmail"
+  [inboxpilot-gmail-callback]="apps/auth/gmail/callback"
+)
+
+for name in "${!GMAIL_LAMBDAS[@]}"; do
+  app="${GMAIL_LAMBDAS[$name]}"
+  echo "Bundling $app..."
+  $ESBUILD "$ROOT/$app/src/index.ts" \
     --bundle \
     --platform=node \
     --target=node22 \
-    --outfile="$ROOT/$gmail_app/dist/index.js" \
+    --outfile="$ROOT/$app/dist/index.js" \
     --external:@aws-sdk/*
 done
 
@@ -50,3 +58,36 @@ $ESBUILD "$ROOT/apps/docs/src/index.ts" \
   --define:SPEC="$SPEC"
 
 echo "Build complete."
+
+# Skip S3 upload if requested (used in CI for PR checks)
+if [ "$SKIP_UPLOAD" = "1" ]; then
+  echo "Skipping S3 upload (SKIP_UPLOAD=1)"
+  exit 0
+fi
+
+# Zip and upload each Lambda to S3 with readable names
+echo ""
+echo "Uploading to s3://$BUCKET..."
+
+ALL_LAMBDAS=(
+  "inboxpilot-docs:apps/docs"
+  "inboxpilot-auth-register:apps/auth/register"
+  "inboxpilot-auth-login:apps/auth/login"
+  "inboxpilot-auth-verify:apps/auth/verify"
+  "inboxpilot-api-keys:apps/keys"
+  "inboxpilot-accounts:apps/accounts"
+  "inboxpilot-connect-gmail:apps/connect/gmail"
+  "inboxpilot-gmail-callback:apps/auth/gmail/callback"
+)
+
+for entry in "${ALL_LAMBDAS[@]}"; do
+  name="${entry%%:*}"
+  app="${entry#*:}"
+  cd "$ROOT/$app/dist"
+  zip -qj "/tmp/$name.zip" index.js
+  aws s3 cp "/tmp/$name.zip" "s3://$BUCKET/$name.zip" --quiet
+  echo "  ✓ $name.zip"
+  rm "/tmp/$name.zip"
+done
+
+echo "Upload complete."

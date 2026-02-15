@@ -1,10 +1,10 @@
-import * as path from "node:path";
 import * as cdk from "aws-cdk-lib";
 import type * as dynamodb from "aws-cdk-lib/aws-dynamodb";
 import * as iam from "aws-cdk-lib/aws-iam";
 import * as lambda from "aws-cdk-lib/aws-lambda";
+import * as s3 from "aws-cdk-lib/aws-s3";
 
-const APPS = path.join(__dirname, "../../../apps");
+const BUCKET_NAME = process.env.LAMBDA_BUCKET || "lambda-dependencies-store";
 
 export interface LambdasProps {
 	domain: string;
@@ -37,11 +37,13 @@ export function createLambdas(
 		"AWSLambdaBasicExecutionRole",
 	);
 
+	const bucket = s3.Bucket.fromBucketName(scope, "LambdaBucket", BUCKET_NAME);
+
 	const docs = new lambda.Function(scope, "InboxPilotDocsFn", {
 		functionName: "inboxpilot-docs",
 		runtime: lambda.Runtime.NODEJS_22_X,
 		handler: "index.handler",
-		code: lambda.Code.fromAsset(path.join(APPS, "docs/dist")),
+		code: lambda.Code.fromBucket(bucket, "inboxpilot-docs.zip"),
 		role,
 	});
 
@@ -49,7 +51,7 @@ export function createLambdas(
 		functionName: "inboxpilot-auth-register",
 		runtime: lambda.Runtime.NODEJS_22_X,
 		handler: "index.handler",
-		code: lambda.Code.fromAsset(path.join(APPS, "auth/register/dist")),
+		code: lambda.Code.fromBucket(bucket, "inboxpilot-auth-register.zip"),
 		role,
 		timeout: cdk.Duration.seconds(10),
 		environment: {
@@ -61,7 +63,7 @@ export function createLambdas(
 		functionName: "inboxpilot-auth-login",
 		runtime: lambda.Runtime.NODEJS_22_X,
 		handler: "index.handler",
-		code: lambda.Code.fromAsset(path.join(APPS, "auth/login/dist")),
+		code: lambda.Code.fromBucket(bucket, "inboxpilot-auth-login.zip"),
 		role,
 		timeout: cdk.Duration.seconds(10),
 		environment: {
@@ -76,7 +78,7 @@ export function createLambdas(
 		functionName: "inboxpilot-auth-verify",
 		runtime: lambda.Runtime.NODEJS_22_X,
 		handler: "index.handler",
-		code: lambda.Code.fromAsset(path.join(APPS, "auth/verify/dist")),
+		code: lambda.Code.fromBucket(bucket, "inboxpilot-auth-verify.zip"),
 		role,
 		timeout: cdk.Duration.seconds(10),
 		environment: {
@@ -91,7 +93,7 @@ export function createLambdas(
 		functionName: "inboxpilot-connect-gmail",
 		runtime: lambda.Runtime.NODEJS_22_X,
 		handler: "index.handler",
-		code: lambda.Code.fromAsset(path.join(APPS, "connect/gmail/dist")),
+		code: lambda.Code.fromBucket(bucket, "inboxpilot-connect-gmail.zip"),
 		role,
 		timeout: cdk.Duration.seconds(10),
 		environment: {
@@ -109,7 +111,7 @@ export function createLambdas(
 			functionName: "inboxpilot-gmail-callback",
 			runtime: lambda.Runtime.NODEJS_22_X,
 			handler: "index.handler",
-			code: lambda.Code.fromAsset(path.join(APPS, "auth/gmail/callback/dist")),
+			code: lambda.Code.fromBucket(bucket, "inboxpilot-gmail-callback.zip"),
 			role,
 			timeout: cdk.Duration.seconds(10),
 			environment: {
@@ -125,7 +127,7 @@ export function createLambdas(
 		functionName: "inboxpilot-accounts",
 		runtime: lambda.Runtime.NODEJS_22_X,
 		handler: "index.handler",
-		code: lambda.Code.fromAsset(path.join(APPS, "accounts/dist")),
+		code: lambda.Code.fromBucket(bucket, "inboxpilot-accounts.zip"),
 		role,
 		timeout: cdk.Duration.seconds(10),
 		environment: {
@@ -137,7 +139,7 @@ export function createLambdas(
 		functionName: "inboxpilot-api-keys",
 		runtime: lambda.Runtime.NODEJS_22_X,
 		handler: "index.handler",
-		code: lambda.Code.fromAsset(path.join(APPS, "keys/dist")),
+		code: lambda.Code.fromBucket(bucket, "inboxpilot-api-keys.zip"),
 		role,
 		timeout: cdk.Duration.seconds(10),
 		environment: {

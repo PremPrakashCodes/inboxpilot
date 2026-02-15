@@ -1,0 +1,81 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+# Only one deploy at a time
+concurrency:
+  group: deploy
+  cancel-in-progress: true
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Deploy
+        run: npm run deploy
+        env:
+          INBOXPILOT_DOMAIN: ${{ secrets.INBOXPILOT_DOMAIN }}
+          LAMBDA_BUCKET: ${{ secrets.LAMBDA_BUCKET }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+
+# ─── AWS OIDC Setup (one-time) ───
+#
+# 1. Create IAM OIDC Provider:
+#    - Provider URL: https://token.actions.githubusercontent.com
+#    - Audience: sts.amazonaws.com
+#
+# 2. Create IAM Role with trust policy:
+#    {
+#      "Version": "2012-10-17",
+#      "Statement": [{
+#        "Effect": "Allow",
+#        "Principal": {
+#          "Federated": "arn:aws:iam::<account-id>:oidc-provider/token.actions.githubusercontent.com"
+#        },
+#        "Action": "sts:AssumeRoleWithWebIdentity",
+#        "Condition": {
+#          "StringEquals": {
+#            "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+#          },
+#          "StringLike": {
+#            "token.actions.githubusercontent.com:sub": "repo:<your-username>/inboxpilot:*"
+#          }
+#        }
+#      }]
+#    }
+#
+# 3. Attach permissions to the role:
+#    - S3 (your Lambda bucket)
+#    - CloudFormation (InfraStack)
+#    - Lambda, API Gateway, DynamoDB, IAM, ACM
+#    See infra/README.md for managed and custom policy options
+#
+# 4. Add GitHub secrets:
+#    - AWS_ROLE_ARN, AWS_REGION
+#    - INBOXPILOT_DOMAIN, LAMBDA_BUCKET
+#    - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
+#    - RESEND_API_KEY, EMAIL_FROM

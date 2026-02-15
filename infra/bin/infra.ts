@@ -8,4 +8,10 @@ import { InfraStack } from "../lib/infra-stack";
 dotenv.config({ path: path.join(__dirname, "../../.env") });
 
 const app = new cdk.App();
-new InfraStack(app, "InfraStack");
+new InfraStack(app, "InfraStack", {
+	synthesizer: new cdk.DefaultStackSynthesizer({
+		fileAssetsBucketName:
+			process.env.LAMBDA_BUCKET || "lambda-dependencies-store",
+		generateBootstrapVersionRule: false,
+	}),
+});
