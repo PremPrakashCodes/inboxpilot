@@ -7,6 +7,8 @@ import type * as lambda from "aws-cdk-lib/aws-lambda";
 export interface ApiProps {
 	domain: string;
 	certificate: acm.Certificate;
+	apiDomain?: string;
+	apiCertificate?: acm.Certificate;
 	lambdas: {
 		docs: lambda.Function;
 		authRegister: lambda.Function;
@@ -27,6 +29,7 @@ export interface ApiProps {
 export interface ApiResult {
 	httpApi: apigwv2.HttpApi;
 	domainName: apigwv2.DomainName;
+	apiDomainName?: apigwv2.DomainName;
 }
 
 const METHOD_MAP: Record<string, apigwv2.HttpMethod> = {
@@ -160,5 +163,18 @@ export function createApi(scope: cdk.Stack, props: ApiProps): ApiResult {
 		});
 	}
 
-	return { httpApi, domainName };
+	// API subdomain (api.inboxpilot.premprakash.dev)
+	let apiDomainName: apigwv2.DomainName | undefined;
+	if (props.apiDomain && props.apiCertificate) {
+		apiDomainName = new apigwv2.DomainName(scope, "InboxPilotApiDomain", {
+			domainName: props.apiDomain,
+			certificate: props.apiCertificate,
+		});
+		new apigwv2.ApiMapping(scope, "ApiDomainMapping", {
+			api: httpApi,
+			domainName: apiDomainName,
+		});
+	}
+
+	return { httpApi, domainName, apiDomainName };
 }

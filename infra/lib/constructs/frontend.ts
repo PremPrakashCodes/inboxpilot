@@ -35,7 +35,7 @@ export function createFrontend(
 		environment: {
 			CACHE_BUCKET_NAME: BUCKET_NAME,
 			CACHE_BUCKET_KEY_PREFIX: "frontend-cache",
-			NEXT_PUBLIC_API_URL: `https://${props.domain}`,
+			NEXT_PUBLIC_API_URL: `https://api.${props.domain}`,
 		},
 	});
 

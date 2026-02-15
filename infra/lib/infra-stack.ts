@@ -7,6 +7,7 @@ import { createLambdas } from "./constructs/lambdas";
 import { createTables } from "./constructs/tables";
 
 const DOMAIN = process.env.INBOXPILOT_DOMAIN || "inboxpilot.premprakash.dev";
+const API_DOMAIN = `api.${DOMAIN}`;
 
 export class InfraStack extends cdk.Stack {
 	constructor(scope: Construct, id: string, props?: cdk.StackProps) {
@@ -17,6 +18,11 @@ export class InfraStack extends cdk.Stack {
 			validation: acm.CertificateValidation.fromDns(),
 		});
 
+		const apiCertificate = new acm.Certificate(this, "InboxPilotApiCert", {
+			domainName: API_DOMAIN,
+			validation: acm.CertificateValidation.fromDns(),
+		});
+
 		const tables = createTables(this);
 		const lambdas = createLambdas(this, { domain: DOMAIN, tables });
 		const frontend = createFrontend(this, { domain: DOMAIN });
@@ -24,6 +30,8 @@ export class InfraStack extends cdk.Stack {
 		const api = createApi(this, {
 			domain: DOMAIN,
 			certificate,
+			apiDomain: API_DOMAIN,
+			apiCertificate,
 			lambdas,
 			frontend,
 		});
@@ -33,5 +41,14 @@ export class InfraStack extends cdk.Stack {
 			value: api.domainName.regionalDomainName,
 			description: `CNAME target in Cloudflare for ${DOMAIN}`,
 		});
+		if (api.apiDomainName) {
+			new cdk.CfnOutput(this, "ApiSubdomainUrl", {
+				value: `https://${API_DOMAIN}`,
+			});
+			new cdk.CfnOutput(this, "ApiSubdomainTarget", {
+				value: api.apiDomainName.regionalDomainName,
+				description: `CNAME target in Cloudflare for ${API_DOMAIN}`,
+			});
+		}
 	}
 }
