@@ -4,6 +4,7 @@ import {
 	Inbox,
 	LogOut,
 	Mail,
+	Plus,
 	Send,
 	Trash2,
 } from "lucide-react";
@@ -28,18 +29,14 @@ import {
 	SidebarMenuItem,
 	SidebarProvider,
 } from "@/components/ui/sidebar";
+import { getConnectedAccounts } from "@/lib/gmail";
 
 const navItems = [
-	{ title: "Inbox", icon: Inbox, href: "/dashboard", badge: "12" },
+	{ title: "Inbox", icon: Inbox, href: "/dashboard", badge: null },
 	{ title: "Sent", icon: Send, href: "/dashboard/sent", badge: null },
-	{ title: "Drafts", icon: FileText, href: "/dashboard/drafts", badge: "2" },
+	{ title: "Drafts", icon: FileText, href: "/dashboard/drafts", badge: null },
 	{ title: "Archive", icon: Archive, href: "/dashboard/archive", badge: null },
 	{ title: "Trash", icon: Trash2, href: "/dashboard/trash", badge: null },
-];
-
-const connectedAccounts = [
-	{ email: "john@gmail.com", provider: "Gmail" },
-	{ email: "john@outlook.com", provider: "Outlook" },
 ];
 
 export default async function DashboardLayout({
@@ -48,7 +45,9 @@ export default async function DashboardLayout({
 	children: React.ReactNode;
 }) {
 	const session = await auth();
-	if (!session?.user) redirect("/login");
+	if (!session?.user?.email) redirect("/login");
+
+	const accounts = await getConnectedAccounts(session.user.email);
 
 	const initials = session.user.name
 		? session.user.name
@@ -97,23 +96,25 @@ export default async function DashboardLayout({
 						<SidebarGroupLabel>Connected Accounts</SidebarGroupLabel>
 						<SidebarGroupContent>
 							<SidebarMenu>
-								{connectedAccounts.map((account) => (
-									<SidebarMenuItem key={account.email}>
+								{accounts.map((account) => (
+									<SidebarMenuItem key={account.providerAccountId}>
 										<SidebarMenuButton>
 											<span className="size-2 rounded-full bg-green-500" />
-											<span className="truncate text-xs">{account.email}</span>
+											<span className="truncate text-xs">
+												{account.providerAccountId}
+											</span>
 										</SidebarMenuButton>
 									</SidebarMenuItem>
 								))}
 								<SidebarMenuItem>
 									<SidebarMenuButton asChild>
-										<Link
-											href="/dashboard/accounts"
+										<a
+											href="/api/connect/gmail"
 											className="text-muted-foreground"
 										>
-											<span className="size-2" />
-											<span className="text-xs">+ Connect account</span>
-										</Link>
+											<Plus className="size-3" />
+											<span className="text-xs">Connect Gmail</span>
+										</a>
 									</SidebarMenuButton>
 								</SidebarMenuItem>
 							</SidebarMenu>
