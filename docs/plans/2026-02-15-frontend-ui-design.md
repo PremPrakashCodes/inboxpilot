@@ -6,7 +6,7 @@ Landing page + authenticated dashboard for InboxPilot, deployed on AWS serverles
 
 ## Stack
 
-- Next.js 15 (App Router) in `apps/web/`
+- Next.js 16 (App Router) in `apps/web/`
 - shadcn/ui + Tailwind CSS
 - OpenNext for AWS Lambda packaging
 - CDK for infrastructure (CloudFront + S3 + Lambda)
@@ -106,7 +106,7 @@ API domain migration:
 
 | Variable | Purpose |
 |---|---|
-| `NEXT_PUBLIC_API_URL` | `https://api.inboxpilot.premprakash.dev` |
+| `NEXT_PUBLIC_API_URL` | Your API base URL (e.g. `https://api.example.com`) |
 
 ## File Structure
 
@@ -115,30 +115,27 @@ apps/web/
 ├── next.config.ts
 ├── package.json
 ├── tsconfig.json
-├── tailwind.config.ts
-├── open-next.config.ts
 ├── public/
 │   └── logo.svg
-├── src/
-│   ├── app/
-│   │   ├── layout.tsx              # Root layout
-│   │   ├── page.tsx                # Landing page
-│   │   ├── login/page.tsx          # Login form
-│   │   ├── register/page.tsx       # Register form
-│   │   └── dashboard/
-│   │       ├── layout.tsx          # Sidebar + auth check
-│   │       ├── page.tsx            # Overview
-│   │       ├── accounts/page.tsx   # Connected accounts
-│   │       └── keys/page.tsx       # API key management
-│   ├── components/
-│   │   ├── ui/                     # shadcn components
-│   │   ├── landing/                # Hero, Features, HowItWorks, Footer
-│   │   ├── dashboard/              # Sidebar, StatsCard, KeysTable, AccountsTable
-│   │   └── auth/                   # LoginForm, RegisterForm, OTPInput
-│   ├── lib/
-│   │   ├── api.ts                  # API client
-│   │   └── utils.ts                # shadcn cn() helper
-│   └── middleware.ts               # Auth cookie check
+├── app/
+│   ├── layout.tsx              # Root layout
+│   ├── page.tsx                # Landing page
+│   ├── login/page.tsx          # Login form
+│   ├── register/page.tsx       # Register form
+│   └── dashboard/
+│       ├── layout.tsx          # Sidebar + auth check
+│       ├── page.tsx            # Overview
+│       ├── accounts/page.tsx   # Connected accounts
+│       └── keys/page.tsx       # API key management
+├── components/
+│   ├── ui/                     # shadcn components
+│   ├── landing/                # Hero, Features, HowItWorks, Footer
+│   ├── dashboard/              # Sidebar, StatsCard, KeysTable, AccountsTable
+│   └── auth/                   # LoginForm, RegisterForm, OTPInput
+├── lib/
+│   ├── api.ts                  # API client
+│   └── utils.ts                # shadcn cn() helper
+└── middleware.ts               # Auth cookie check
 ```
 
 ## Deployment
