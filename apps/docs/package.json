@@ -1,7 +1,0 @@
-{
-	"name": "@inboxpilot/docs",
-	"private": true,
-	"dependencies": {
-		"@inboxpilot/core": "*"
-	}
-}
