@@ -10,8 +10,6 @@ const METHOD_MAP: Record<string, apigwv2.HttpMethod> = {
 	DELETE: apigwv2.HttpMethod.DELETE,
 };
 
-// --- Backend API (api.example.com) ---
-
 export interface BackendApiProps {
 	lambdas: {
 		docs: lambda.Function;
@@ -118,53 +116,6 @@ export function createBackendApi(
 			),
 		});
 	}
-
-	return { httpApi };
-}
-
-// --- Frontend Gateway (example.com) ---
-
-export interface FrontendGatewayProps {
-	domainName: apigwv2.DomainName;
-	frontend: {
-		serverFn: lambda.Function;
-		imageFn: lambda.Function;
-		staticFn: lambda.Function;
-	};
-}
-
-export function createFrontendGateway(
-	scope: cdk.Stack,
-	props: FrontendGatewayProps,
-): { httpApi: apigwv2.HttpApi } {
-	// Keep construct ID "InboxPilotApi" to preserve existing CloudFormation resource
-	const httpApi = new apigwv2.HttpApi(scope, "InboxPilotApi", {
-		apiName: "InboxPilot Frontend",
-		description: "Frontend gateway for InboxPilot",
-		defaultDomainMapping: { domainName: props.domainName },
-		defaultIntegration: new integrations.HttpLambdaIntegration(
-			"FrontendServerIntegration",
-			props.frontend.serverFn,
-		),
-	});
-
-	httpApi.addRoutes({
-		path: "/_next/image",
-		methods: [apigwv2.HttpMethod.GET],
-		integration: new integrations.HttpLambdaIntegration(
-			"FrontendImageIntegration",
-			props.frontend.imageFn,
-		),
-	});
-
-	httpApi.addRoutes({
-		path: "/_next/static/{proxy+}",
-		methods: [apigwv2.HttpMethod.GET],
-		integration: new integrations.HttpLambdaIntegration(
-			"FrontendStaticIntegration",
-			props.frontend.staticFn,
-		),
-	});
 
 	return { httpApi };
 }

@@ -58,10 +58,6 @@ $ESBUILD "$ROOT/apps/docs/src/index.ts" \
   --outfile="$ROOT/apps/docs/dist/index.js" \
   --define:SPEC="$SPEC"
 
-# Build Next.js frontend with OpenNext
-echo "Building frontend with OpenNext..."
-cd "$ROOT/apps/web" && npx @opennextjs/aws build
-
 echo "Build complete."
 
 # Skip S3 upload if requested (used in CI for PR checks)
@@ -96,14 +92,3 @@ for entry in "${ALL_LAMBDAS[@]}"; do
 done
 
 echo "Upload complete."
-
-# Upload frontend assets and cache to S3
-OPEN_NEXT="$ROOT/apps/web/.open-next"
-echo ""
-echo "Uploading frontend assets to s3://$BUCKET/frontend-assets..."
-aws s3 sync "$OPEN_NEXT/assets" "s3://$BUCKET/frontend-assets" --delete --quiet
-echo "  ✓ frontend-assets"
-
-echo "Uploading frontend cache to s3://$BUCKET/frontend-cache..."
-aws s3 sync "$OPEN_NEXT/cache" "s3://$BUCKET/frontend-cache" --quiet
-echo "  ✓ frontend-cache"
