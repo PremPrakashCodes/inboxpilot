@@ -5,6 +5,7 @@ import { InfraStack } from "../lib/infra-stack";
 let template: Template;
 
 beforeAll(() => {
+	process.env.INBOXPILOT_DOMAIN = "example.com";
 	const app = new cdk.App();
 	const stack = new InfraStack(app, "TestStack");
 	template = Template.fromStack(stack);
@@ -113,7 +114,7 @@ test("DynamoDB policy attached to shared role", () => {
 
 test("HTTP API created", () => {
 	template.hasResourceProperties("AWS::ApiGatewayV2::Api", {
-		Name: "InboxPilot API",
+		Name: "InboxPilot Backend",
 		ProtocolType: "HTTP",
 	});
 });
