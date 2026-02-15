@@ -42,7 +42,6 @@ jobs:
           GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
-          CLOUDFRONT_CERT_ARN: ${{ secrets.CLOUDFRONT_CERT_ARN }}
 
 # ─── AWS OIDC Setup (one-time) ───
 #
@@ -81,4 +80,3 @@ jobs:
 #    - INBOXPILOT_DOMAIN, LAMBDA_BUCKET
 #    - GOOGLE_CLIENT_ID, GOOGLE_CLIENT_SECRET
 #    - RESEND_API_KEY, EMAIL_FROM
-#    - CLOUDFRONT_CERT_ARN (ACM cert ARN in us-east-1 for your domain)

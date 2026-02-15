@@ -17,6 +17,10 @@ export interface ApiProps {
 		accounts: lambda.Function;
 		apiKeys: lambda.Function;
 	};
+	frontend?: {
+		serverFn: lambda.Function;
+		imageFn: lambda.Function;
+	};
 }
 
 export interface ApiResult {
@@ -124,6 +128,26 @@ export function createApi(scope: cdk.Stack, props: ApiProps): ApiResult {
 			integration: new integrations.HttpLambdaIntegration(
 				`${route.name}Integration`,
 				route.fn,
+			),
+		});
+	}
+
+	// Frontend routes — SSR Lambda as $default catch-all
+	if (props.frontend) {
+		httpApi.addRoutes({
+			path: "/_next/image",
+			methods: [apigwv2.HttpMethod.GET],
+			integration: new integrations.HttpLambdaIntegration(
+				"FrontendImageIntegration",
+				props.frontend.imageFn,
+			),
+		});
+
+		httpApi.addRoutes({
+			path: "/$default",
+			integration: new integrations.HttpLambdaIntegration(
+				"FrontendServerIntegration",
+				props.frontend.serverFn,
 			),
 		});
 	}
