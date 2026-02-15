@@ -20,6 +20,7 @@ export interface ApiProps {
 	frontend?: {
 		serverFn: lambda.Function;
 		imageFn: lambda.Function;
+		staticFn: lambda.Function;
 	};
 }
 
@@ -138,7 +139,7 @@ export function createApi(scope: cdk.Stack, props: ApiProps): ApiResult {
 		});
 	}
 
-	// Frontend image optimization route
+	// Frontend routes
 	if (props.frontend) {
 		httpApi.addRoutes({
 			path: "/_next/image",
@@ -146,6 +147,15 @@ export function createApi(scope: cdk.Stack, props: ApiProps): ApiResult {
 			integration: new integrations.HttpLambdaIntegration(
 				"FrontendImageIntegration",
 				props.frontend.imageFn,
+			),
+		});
+
+		httpApi.addRoutes({
+			path: "/_next/static/{proxy+}",
+			methods: [apigwv2.HttpMethod.GET],
+			integration: new integrations.HttpLambdaIntegration(
+				"FrontendStaticIntegration",
+				props.frontend.staticFn,
 			),
 		});
 	}
