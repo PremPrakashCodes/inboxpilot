@@ -19,6 +19,14 @@
 			"recommended": true
 		}
 	},
+	"overrides": [
+		{
+			"includes": ["apps/web/components/ui/**"],
+			"linter": {
+				"enabled": false
+			}
+		}
+	],
 	"javascript": {
 		"formatter": {
 			"quoteStyle": "double"
