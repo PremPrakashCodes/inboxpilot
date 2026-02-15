@@ -33,7 +33,7 @@
 		"format": "biome check --write .",
 		"build": "bash scripts/build.sh",
 		"deploy": "npm run build && cd infra && npx cdk deploy --require-approval never",
-		"prepare": "husky"
+		"prepare": "husky || true"
 	},
 	"license": "ISC",
 	"devDependencies": {
