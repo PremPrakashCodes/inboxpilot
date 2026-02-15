@@ -42,36 +42,14 @@ function GoogleIcon({ className }: { className?: string }) {
 	);
 }
 
-export default async function LoginPage({
-	searchParams,
-}: {
-	searchParams: Promise<{ verify?: string }>;
-}) {
-	const { verify } = await searchParams;
-
-	if (verify) {
-		return (
-			<div className="flex min-h-svh items-center justify-center px-4">
-				<Card className="w-full max-w-sm">
-					<CardHeader className="text-center">
-						<Mail className="mx-auto mb-2 size-8 text-muted-foreground" />
-						<CardTitle>Check your email</CardTitle>
-						<CardDescription>
-							We sent you a magic link. Click the link in your email to sign in.
-						</CardDescription>
-					</CardHeader>
-				</Card>
-			</div>
-		);
-	}
-
+export default function RegisterPage() {
 	return (
 		<div className="flex min-h-svh items-center justify-center px-4">
 			<Card className="w-full max-w-sm">
 				<CardHeader className="text-center">
-					<CardTitle className="text-2xl">Sign in to InboxPilot</CardTitle>
+					<CardTitle className="text-2xl">Create your account</CardTitle>
 					<CardDescription>
-						Enter your email to receive a magic link
+						Get started with InboxPilot in seconds
 					</CardDescription>
 				</CardHeader>
 				<CardContent className="grid gap-4">
@@ -83,7 +61,7 @@ export default async function LoginPage({
 					>
 						<Button variant="outline" className="w-full" type="submit">
 							<GoogleIcon className="size-4" />
-							Sign in with Google
+							Sign up with Google
 						</Button>
 					</form>
 
@@ -106,6 +84,16 @@ export default async function LoginPage({
 						className="grid gap-4"
 					>
 						<div className="grid gap-2">
+							<Label htmlFor="name">Name</Label>
+							<Input
+								id="name"
+								name="name"
+								type="text"
+								placeholder="John Doe"
+								required
+							/>
+						</div>
+						<div className="grid gap-2">
 							<Label htmlFor="email">Email</Label>
 							<Input
 								id="email"
@@ -123,9 +111,9 @@ export default async function LoginPage({
 				</CardContent>
 				<CardFooter className="justify-center">
 					<p className="text-sm text-muted-foreground">
-						Don&apos;t have an account?{" "}
-						<Link href="/register" className="text-foreground underline">
-							Sign up
+						Already have an account?{" "}
+						<Link href="/login" className="text-foreground underline">
+							Log in
 						</Link>
 					</p>
 				</CardFooter>
