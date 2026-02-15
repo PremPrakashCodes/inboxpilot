@@ -1,5 +1,6 @@
 import { ArrowRight, Inbox, Mail, Sparkles } from "lucide-react";
 import Link from "next/link";
+import { auth, signOut } from "@/auth";
 import { Button } from "@/components/ui/button";
 
 function GmailIcon({ className }: { className?: string }) {
@@ -84,7 +85,9 @@ const features = [
 	},
 ];
 
-export default function Home() {
+export default async function Home() {
+	const session = await auth();
+
 	return (
 		<div className="flex min-h-svh flex-col">
 			<header className="flex items-center justify-between px-6 py-4 md:px-10">
@@ -95,12 +98,32 @@ export default function Home() {
 					</span>
 				</div>
 				<nav className="flex items-center gap-2">
-					<Button variant="ghost" size="sm" asChild>
-						<Link href="/login">Log in</Link>
-					</Button>
-					<Button size="sm" asChild>
-						<Link href="/register">Get Started</Link>
-					</Button>
+					{session?.user ? (
+						<>
+							<span className="text-sm text-muted-foreground">
+								{session.user.email}
+							</span>
+							<form
+								action={async () => {
+									"use server";
+									await signOut();
+								}}
+							>
+								<Button variant="ghost" size="sm" type="submit">
+									Sign out
+								</Button>
+							</form>
+						</>
+					) : (
+						<>
+							<Button variant="ghost" size="sm" asChild>
+								<Link href="/login">Log in</Link>
+							</Button>
+							<Button size="sm" asChild>
+								<Link href="/register">Get Started</Link>
+							</Button>
+						</>
+					)}
 				</nav>
 			</header>
 
