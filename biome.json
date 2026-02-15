@@ -21,9 +21,17 @@
 	},
 	"overrides": [
 		{
-			"includes": ["apps/web/components/ui/**"],
+			"includes": ["apps/web/**"],
 			"linter": {
-				"enabled": false
+				"rules": {
+					"suspicious": {
+						"noUnknownAtRules": "off"
+					}
+				},
+				"domains": {
+					"next": "recommended",
+					"react": "recommended"
+				}
 			}
 		}
 	],
