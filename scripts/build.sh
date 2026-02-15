@@ -57,6 +57,10 @@ $ESBUILD "$ROOT/apps/docs/src/index.ts" \
   --outfile="$ROOT/apps/docs/dist/index.js" \
   --define:SPEC="$SPEC"
 
+# Build Next.js frontend with OpenNext
+echo "Building frontend with OpenNext..."
+cd "$ROOT/apps/web" && npx @opennextjs/aws build
+
 echo "Build complete."
 
 # Skip S3 upload if requested (used in CI for PR checks)
