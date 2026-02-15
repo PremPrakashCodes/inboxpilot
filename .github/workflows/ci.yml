@@ -20,6 +20,9 @@ jobs:
       - name: Lint
         run: npx biome check .
 
+      - name: Build core
+        run: npm run build --workspace=packages/core
+
       - name: Test
         run: npm test
 
