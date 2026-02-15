@@ -100,9 +100,9 @@ export default async function Home() {
 				<nav className="flex items-center gap-2">
 					{session?.user ? (
 						<>
-							<span className="text-sm text-muted-foreground">
-								{session.user.email}
-							</span>
+							<Button size="sm" asChild>
+								<Link href="/dashboard">Dashboard</Link>
+							</Button>
 							<form
 								action={async () => {
 									"use server";
